@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>TestWarden Demo Shop</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 720px; color: #222; }
+    nav a { margin-right: 1rem; }
+    .hidden { display: none; }
+    .error { color: #c00; }
+    .success { color: #080; }
+    button { padding: 0.4rem 0.9rem; }
+    li { padding: 2px 0; }
+    footer { margin-top: 3rem; color: #777; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="#home" id="nav-home">Home</a>
+    <a href="#products" id="nav-products">Products</a>
+    <a href="#about" id="nav-about">About</a>
+  </nav>
+
+  <h1 id="page-title">TestWarden Demo Shop</h1>
+
+  <section id="login">
+    <h2>Login</h2>
+    <input id="username" placeholder="Username" />
+    <input id="password" type="password" placeholder="Password" />
+    <button id="login-button">Sign in</button>
+    <p id="welcome" class="hidden success"></p>
+    <p id="login-error" class="hidden error">Invalid credentials</p>
+  </section>
+
+  <section id="counter-section">
+    <h2>Cart</h2>
+    <button id="add-item">Add item</button>
+    <span>Items: <strong id="counter">0</strong></span>
+  </section>
+
+  <section id="search-section">
+    <h2>Products</h2>
+    <input id="search" placeholder="Filter products…" />
+    <ul id="products-list">
+      <li>Anvil</li>
+      <li>Rocket skates</li>
+      <li>Giant magnet</li>
+      <li>Bird seed</li>
+      <li>Tornado kit</li>
+    </ul>
+  </section>
+
+  <div id="promo-banner" class="hidden">Limited time: free shipping!</div>
+
+  <footer id="footer">© 2026 TestWarden Demo Shop — for test purposes only</footer>
+
+  <script>
+    document.getElementById("login-button").addEventListener("click", () => {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      const welcome = document.getElementById("welcome");
+      const error = document.getElementById("login-error");
+      if (user === "demo" && pass === "demo123") {
+        welcome.textContent = `Welcome back, ${user}!`;
+        welcome.classList.remove("hidden");
+        error.classList.add("hidden");
+      } else {
+        error.classList.remove("hidden");
+        welcome.classList.add("hidden");
+      }
+    });
+
+    let count = 0;
+    document.getElementById("add-item").addEventListener("click", () => {
+      count += 1;
+      document.getElementById("counter").textContent = String(count);
+    });
+
+    document.getElementById("search").addEventListener("input", (event) => {
+      const term = event.target.value.toLowerCase();
+      document.querySelectorAll("#products-list li").forEach((item) => {
+        item.style.display = item.textContent.toLowerCase().includes(term) ? "" : "none";
+      });
+    });
+
+    // Banner appears after a short delay — exercises Playwright auto-waiting.
+    setTimeout(() => {
+      document.getElementById("promo-banner").classList.remove("hidden");
+    }, 600);
+  </script>
+</body>
+</html>

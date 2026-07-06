@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16
+    container_name: testwarden-db
+    environment:
+      POSTGRES_USER: testwarden
+      POSTGRES_PASSWORD: testwarden
+      POSTGRES_DB: testwarden
+    ports:
+      - "5433:5432"
+    volumes:
+      - testwarden-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testwarden"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  testwarden-pgdata:

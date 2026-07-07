@@ -1,7 +1,11 @@
+import re
+
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from testwarden.auth import create_api_key
 from testwarden.db import get_db
 from testwarden.models import Project, Run, TestCase, TestResult
 
@@ -35,6 +39,39 @@ def _run_summary(run: Run) -> dict:
         "flaky_count": run.flaky_count,
         "duration_ms": run.duration_ms,
     }
+
+
+class ProjectCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    slug: str | None = None
+    repo_url: str | None = None
+
+
+def _slugify(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:100] or "project"
+
+
+@router.post("")
+def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
+    """Create a project; the ingestion API key is returned ONCE - store it safely."""
+    slug = _slugify(payload.slug or payload.name)
+    if db.scalar(select(Project).where(Project.slug == slug)) is not None:
+        raise HTTPException(status_code=409, detail=f"Project '{slug}' already exists")
+    project = Project(slug=slug, name=payload.name, repo_url=payload.repo_url or None)
+    db.add(project)
+    db.flush()
+    api_key = create_api_key(db, project, name="default")
+    db.commit()
+    return {"slug": project.slug, "name": project.name, "api_key": api_key}
+
+
+@router.post("/{slug}/keys")
+def create_key(slug: str, db: Session = Depends(get_db)):
+    """Mint an additional ingestion key (shown once)."""
+    project = get_project_by_slug(slug, db)
+    api_key = create_api_key(db, project, name="additional")
+    db.commit()
+    return {"slug": project.slug, "api_key": api_key}
 
 
 @router.get("")

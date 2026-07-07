@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useProjects } from "../api/hooks";
+import { NewProject } from "../components/NewProject";
 import { Sparkline } from "../components/Sparkline";
 import { StatusBadge } from "../components/StatusBadge";
 import { formatDate } from "../components/status";
@@ -20,7 +21,10 @@ export function ProjectsPage() {
     );
   return (
     <div>
-      <h1 className="grad-text mb-6 text-3xl font-bold">Projects</h1>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <h1 className="grad-text text-3xl font-bold">Projects</h1>
+        <NewProject />
+      </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {projects.map((project) => {
           const lastRun = project.last_run;

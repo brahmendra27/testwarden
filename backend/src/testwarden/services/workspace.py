@@ -49,6 +49,11 @@ class FixWorkspace:
             except WorkspaceError:
                 pass  # commit not in history (e.g. seeded data) — stay on default branch
 
+    def init_empty(self) -> None:
+        """Fresh workspace with no source repo (e.g. generated API test suites)."""
+        self.repo_dir.mkdir(parents=True, exist_ok=True)
+        _run_git(["init", "-b", "main"], cwd=self.repo_dir)
+
     def default_branch(self) -> str:
         try:
             ref = _run_git(["symbolic-ref", "--short", "HEAD"], cwd=self.repo_dir).strip()
@@ -103,12 +108,15 @@ class FixWorkspace:
         path.write_text(content, encoding="utf-8")
         return f"Wrote {rel_path} ({len(content)} bytes)"
 
-    def run_tests(self, args: str, cwd: str = ".", timeout: int = 300) -> str:
+    def run_tests(
+        self, args: str, cwd: str = ".", timeout: int = 300,
+        extra_env: dict[str, str] | None = None,
+    ) -> str:
         import shlex
         import sys
 
         workdir = self._safe(cwd)
-        env = {**os.environ, **TEST_ENV_OVERRIDES}
+        env = {**os.environ, **TEST_ENV_OVERRIDES, **(extra_env or {})}
         try:
             result = subprocess.run(
                 [sys.executable, "-m", "pytest", *shlex.split(args), "-q", "--no-header"],

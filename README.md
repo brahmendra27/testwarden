@@ -82,6 +82,11 @@ Both need `ANTHROPIC_API_KEY` set on the backend server (model: `claude-opus-4-8
 - **AI failure analysis** — the ✨ button on any failure sends the stack trace, retry history
   and flake stats to Claude, which returns a root cause, a classification
   (APP_BUG / TEST_BUG / FLAKY_TIMING / ENVIRONMENT) and a suggested fix. Cached per result.
+- **API test agent** — the "API test agent" page takes an OpenAPI spec URL + base URL and
+  launches an agent that generates a pytest + httpx suite (RestAssured-style assertions:
+  status codes, headers, body shapes, negative auth cases), verifies it against the live
+  API, and reports the results into the dashboard as a `pytest-httpx` run. Never calls
+  state-changing endpoints with valid data.
 - **Auto-fix agent** — the 🔧 button launches an autonomous agent that clones the project's
   `repo_url` (GitHub URL or local path), locates the root cause with read/edit/run-tests
   tools, applies a minimal fix, re-runs the failing test to verify, commits to a
@@ -91,7 +96,5 @@ Both need `ANTHROPIC_API_KEY` set on the backend server (model: `claude-opus-4-8
 
 ## Roadmap
 
-- **API-testing agent:** generate + execute REST API tests (pytest + httpx) from an
-  OpenAPI spec, reporting through the same plugin (`framework="pytest-httpx"`).
 - **Selenium Java:** JUnit XML ingestion adapter translating into the same result envelope.
 - Auto-quarantine suggestions, failure clustering by fingerprint, Slack digests.

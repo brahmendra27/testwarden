@@ -11,6 +11,7 @@ import { RunDetailPage } from "./pages/RunDetailPage";
 import { TestDetailPage } from "./pages/TestDetailPage";
 import { FlakyTestsPage } from "./pages/FlakyTestsPage";
 import { ComparePage } from "./pages/ComparePage";
+import { ApiAgentPage } from "./pages/ApiAgentPage";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 15_000 } },
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
       { path: "/p/:slug/tests/:caseId", element: <TestDetailPage /> },
       { path: "/p/:slug/flaky", element: <FlakyTestsPage /> },
       { path: "/p/:slug/compare", element: <ComparePage /> },
+      { path: "/p/:slug/api-agent", element: <ApiAgentPage /> },
     ],
   },
 ]);

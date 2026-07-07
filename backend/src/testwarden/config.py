@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     # Runs still "running" after this many minutes are swept to "interrupted".
     interrupted_run_ttl_minutes: int = 120
     cors_origins: list[str] = ["http://localhost:5173"]
+    # URL agents use to report generated-suite results back into this server.
+    public_url: str = "http://localhost:8787"
 
 
 settings = Settings()

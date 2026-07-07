@@ -128,7 +128,7 @@ def _preview(tool_input: dict) -> str:
     return text[:200]
 
 
-def run_agent(client, workspace: FixWorkspace, task: str, log) -> dict:
+def run_agent(client, workspace: FixWorkspace, task: str, log, system: str = SYSTEM_PROMPT) -> dict:
     """Manual tool loop. Returns {'outcome': 'fixed'|'cannot_fix'|'gave_up', 'summary': str}."""
     messages = [{"role": "user", "content": task}]
     for iteration in range(1, MAX_ITERATIONS + 1):
@@ -136,7 +136,7 @@ def run_agent(client, workspace: FixWorkspace, task: str, log) -> dict:
             model=MODEL,
             max_tokens=6000,
             thinking={"type": "adaptive"},
-            system=SYSTEM_PROMPT,
+            system=system,
             tools=TOOLS,
             messages=messages,
         )

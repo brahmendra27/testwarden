@@ -40,6 +40,7 @@ export function Layout() {
               <SideLink to={`/p/${slug}/runs`} label="Runs" />
               <SideLink to={`/p/${slug}/flaky`} label="Flaky tests" />
               <SideLink to={`/p/${slug}/compare`} label="Compare runs" />
+              <SideLink to={`/p/${slug}/api-agent`} label="API test agent" />
             </>
           )}
         </nav>

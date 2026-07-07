@@ -11,12 +11,12 @@ function RunRow({ run, slug }: { run: RunSummary; slug: string }) {
   return (
     <Link
       to={`/p/${slug}/runs/${run.id}`}
-      className="block rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 transition hover:border-zinc-600"
+      className="card card-hover block p-4"
     >
       <div className="mb-2 flex flex-wrap items-center gap-3 text-sm">
         <StatusBadge status={run.status === "completed" ? (run.failed + run.error_count > 0 ? "failed" : "passed") : run.status} />
         <span className="font-medium text-zinc-200">Run #{run.id}</span>
-        {run.branch && <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400">{run.branch}</span>}
+        {run.branch && <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-zinc-400">{run.branch}</span>}
         {run.commit_sha && <span className="font-mono text-xs text-zinc-500">{run.commit_sha.slice(0, 8)}</span>}
         <span className="ml-auto text-zinc-500">{formatDate(run.started_at)}</span>
       </div>
@@ -42,11 +42,11 @@ export function RunListPage() {
   return (
     <div>
       <div className="mb-6 flex items-center gap-4">
-        <h1 className="text-2xl font-semibold text-zinc-100">Runs</h1>
+        <h1 className="grad-text text-3xl font-bold">Runs</h1>
         <select
           value={branch}
           onChange={(event) => setBranch(event.target.value)}
-          className="ml-auto rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-300"
+          className="field ml-auto"
         >
           <option value="">All branches</option>
           {branches?.map((name) => (

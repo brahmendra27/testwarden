@@ -9,12 +9,12 @@ export function FlakyTestsPage() {
   if (isLoading) return <p className="text-zinc-500">Loading flaky tests…</p>;
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-semibold text-zinc-100">Flaky tests</h1>
+      <h1 className="grad-text mb-2 text-3xl font-bold">Flaky tests</h1>
       <p className="mb-6 text-sm text-zinc-500">
         Tests that flip between pass and fail across runs, or that regularly need retries to pass.
       </p>
       {!flaky?.length && (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-8 text-center text-zinc-500">
+        <div className="card p-8 text-center text-zinc-500">
           No flaky tests detected. 🎉
         </div>
       )}
@@ -23,7 +23,7 @@ export function FlakyTestsPage() {
           <Link
             key={testCase.id}
             to={`/p/${slug}/tests/${testCase.id}`}
-            className="block rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 transition hover:border-zinc-600"
+            className="card card-hover block p-4"
           >
             <div className="mb-2 flex flex-wrap items-center gap-3">
               <span className="rounded bg-amber-500/15 px-2 py-0.5 text-sm font-semibold text-amber-400">

@@ -13,14 +13,14 @@ export function ProjectsPage() {
       <div className="mt-20 text-center text-zinc-500">
         <p className="text-lg">No projects yet.</p>
         <p className="mt-2 text-sm">
-          Seed demo data with <code className="rounded bg-zinc-900 px-1.5 py-0.5">python -m testwarden.seed</code>{" "}
+          Seed demo data with <code className="rounded bg-white/10 px-1.5 py-0.5">python -m testwarden.seed</code>{" "}
           or point the pytest reporter at this server.
         </p>
       </div>
     );
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-zinc-100">Projects</h1>
+      <h1 className="grad-text mb-6 text-3xl font-bold">Projects</h1>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {projects.map((project) => {
           const lastRun = project.last_run;
@@ -29,8 +29,8 @@ export function ProjectsPage() {
           return (
             <Link
               key={project.id}
-              to={`/p/${project.slug}/runs`}
-              className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5 transition hover:border-zinc-600"
+              to={`/p/${project.slug}/overview`}
+              className="card card-hover p-5"
             >
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-lg font-medium text-zinc-100">{project.name}</span>

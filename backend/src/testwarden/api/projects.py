@@ -3,7 +3,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from testwarden.db import get_db
-from testwarden.models import Project, Run, TestCase
+from testwarden.models import Project, Run, TestCase, TestResult
 
 router = APIRouter(prefix="/api/v1/projects", tags=["projects"])
 
@@ -95,6 +95,99 @@ def project_branches(slug: str, db: Session = Depends(get_db)):
         .distinct()
     ).all()
     return sorted(rows)
+
+
+@router.get("/{slug}/overview")
+def project_overview(slug: str, window: int = 30, db: Session = Depends(get_db)):
+    """Health command-center: KPI trends and problem tests over the last N runs."""
+    project = get_project_by_slug(slug, db)
+    runs = db.scalars(
+        select(Run)
+        .where(Run.project_id == project.id, Run.status == "completed")
+        .order_by(Run.started_at.desc())
+        .limit(window)
+    ).all()
+    runs.reverse()  # oldest -> newest for charts
+    run_ids = [run.id for run in runs]
+
+    series = [
+        {
+            "run_id": run.id,
+            "started_at": run.started_at.isoformat() if run.started_at else None,
+            "pass_rate": round(run.passed / run.total, 4) if run.total else None,
+            "duration_ms": run.duration_ms,
+            "failed": run.failed + run.error_count,
+            "flaky": run.flaky_count,
+            "total": run.total,
+        }
+        for run in runs
+    ]
+
+    latest = runs[-1] if runs else None
+    previous = runs[-2] if len(runs) > 1 else None
+
+    def pass_rate(run):
+        return run.passed / run.total if run and run.total else None
+
+    flaky_count = db.scalar(
+        select(func.count(TestCase.id)).where(
+            TestCase.project_id == project.id, TestCase.is_flaky.is_(True)
+        )
+    )
+
+    most_failing = []
+    if run_ids:
+        rows = db.execute(
+            select(TestResult.test_case_id, func.count(TestResult.id).label("failures"))
+            .where(TestResult.run_id.in_(run_ids), TestResult.status.in_(("failed", "error")))
+            .group_by(TestResult.test_case_id)
+            .order_by(func.count(TestResult.id).desc())
+            .limit(5)
+        ).all()
+        for case_id, failures in rows:
+            case = db.get(TestCase, case_id)
+            most_failing.append(
+                {
+                    "test_case_id": case_id,
+                    "node_id": case.node_id,
+                    "failures": failures,
+                    "window_runs": len(run_ids),
+                    "last_status": case.last_status,
+                    "is_flaky": case.is_flaky,
+                }
+            )
+
+    slowest = [
+        {
+            "test_case_id": case.id,
+            "node_id": case.node_id,
+            "avg_duration_ms": case.avg_duration_ms,
+            "p95_duration_ms": case.p95_duration_ms,
+        }
+        for case in db.scalars(
+            select(TestCase)
+            .where(TestCase.project_id == project.id)
+            .order_by(TestCase.avg_duration_ms.desc())
+            .limit(5)
+        ).all()
+    ]
+
+    return {
+        "project": {"slug": project.slug, "name": project.name},
+        "kpis": {
+            "pass_rate": pass_rate(latest),
+            "pass_rate_prev": pass_rate(previous),
+            "flaky_count": flaky_count or 0,
+            "last_duration_ms": latest.duration_ms if latest else 0,
+            "prev_duration_ms": previous.duration_ms if previous else 0,
+            "total_tests": latest.total if latest else 0,
+            "last_run_id": latest.id if latest else None,
+            "last_failed": (latest.failed + latest.error_count) if latest else 0,
+        },
+        "series": series,
+        "most_failing": most_failing,
+        "slowest": slowest,
+    }
 
 
 @router.get("/{slug}/flaky")

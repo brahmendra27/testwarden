@@ -31,7 +31,7 @@ function RunSelect({
       <select
         value={value ?? ""}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-200"
+        className="field"
       >
         <option value="" disabled>
           select run
@@ -64,7 +64,7 @@ export function ComparePage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-semibold text-zinc-100">Compare runs</h1>
+      <h1 className="grad-text mb-4 text-3xl font-bold">Compare runs</h1>
       <div className="mb-6 flex flex-wrap items-center gap-6">
         <RunSelect label="Base" value={base} onChange={setParam("base")} runs={runs ?? []} />
         <span className="text-zinc-600">→</span>
@@ -81,10 +81,10 @@ export function ComparePage() {
               <button
                 key={bucket.key}
                 onClick={() => setActiveBucket(bucket.key)}
-                className={`rounded-lg border px-4 py-3 text-left transition ${
+                className={`rounded-xl border px-4 py-3 text-left transition ${
                   activeBucket === bucket.key
-                    ? "border-zinc-500 bg-zinc-900"
-                    : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-600"
+                    ? "border-blue-400/50 bg-blue-500/10 shadow-[0_0_20px_rgba(61,106,254,0.25)]"
+                    : "border-white/10 bg-white/[0.04] hover:border-blue-400/30"
                 }`}
               >
                 <div className={`text-xl font-semibold ${bucket.tone}`}>
@@ -97,9 +97,9 @@ export function ComparePage() {
           {items.length === 0 ? (
             <p className="text-zinc-500">Nothing in this bucket.</p>
           ) : (
-            <div className="overflow-hidden rounded-lg border border-zinc-800">
+            <div className="card overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-zinc-900 text-left text-xs uppercase text-zinc-500">
+                <thead className="bg-white/5 text-left text-xs uppercase text-zinc-500">
                   <tr>
                     <th className="px-4 py-2">Test</th>
                     <th className="px-4 py-2">Base</th>
@@ -108,7 +108,7 @@ export function ComparePage() {
                 </thead>
                 <tbody>
                   {items.map((item) => (
-                    <tr key={item.test_case_id} className="border-t border-zinc-800/60 hover:bg-zinc-900/60">
+                    <tr key={item.test_case_id} className="border-t border-white/5 hover:bg-white/5">
                       <td className="px-4 py-2">
                         <Link to={`/p/${slug}/tests/${item.test_case_id}`} className="font-mono text-xs text-zinc-300 hover:text-sky-400">
                           {item.node_id}

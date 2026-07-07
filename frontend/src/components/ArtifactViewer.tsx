@@ -13,9 +13,9 @@ export function ArtifactViewer({ artifacts }: { artifacts: ArtifactInfo[] }) {
   return (
     <div className="space-y-4">
       {artifacts.map((artifact) => (
-        <div key={artifact.id} className="rounded-lg border border-zinc-800 p-3">
+        <div key={artifact.id} className="rounded-lg border border-white/10 p-3">
           <div className="mb-2 flex items-center gap-3 text-sm">
-            <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs uppercase text-zinc-400">
+            <span className="rounded bg-white/10 px-2 py-0.5 text-xs uppercase text-zinc-400">
               {artifact.kind}
             </span>
             <span className="text-zinc-300">{artifact.file_name}</span>
@@ -32,7 +32,7 @@ export function ArtifactViewer({ artifacts }: { artifacts: ArtifactInfo[] }) {
             <img
               src={artifact.url}
               alt={artifact.file_name}
-              className="max-h-80 rounded border border-zinc-800"
+              className="max-h-80 rounded border border-white/10"
             />
           )}
           {artifact.content_type.startsWith("video/") && (

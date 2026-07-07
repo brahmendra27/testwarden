@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import { Layout } from "./Layout";
 import { ProjectsPage } from "./pages/ProjectsPage";
+import { OverviewPage } from "./pages/OverviewPage";
 import { RunListPage } from "./pages/RunListPage";
 import { RunDetailPage } from "./pages/RunDetailPage";
 import { TestDetailPage } from "./pages/TestDetailPage";
@@ -20,6 +21,7 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { path: "/", element: <ProjectsPage /> },
+      { path: "/p/:slug/overview", element: <OverviewPage /> },
       { path: "/p/:slug/runs", element: <RunListPage /> },
       { path: "/p/:slug/runs/:runId", element: <RunDetailPage /> },
       { path: "/p/:slug/tests/:caseId", element: <TestDetailPage /> },

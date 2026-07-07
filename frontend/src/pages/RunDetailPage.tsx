@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useResultDetail, useRun, useRunResults, useRunStrip } from "../api/hooks";
 import type { ResultRow } from "../api/types";
+import { AiAnalysis } from "../components/AiAnalysis";
 import { ArtifactViewer } from "../components/ArtifactViewer";
 import { RunStrip } from "../components/RunStrip";
 import { StackTrace } from "../components/StackTrace";
@@ -10,7 +11,7 @@ import { formatDate, formatDuration } from "../components/status";
 
 function Stat({ label, value, tone }: { label: string; value: number | string; tone?: string }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+    <div className="card px-4 py-3">
       <div className={`text-xl font-semibold ${tone ?? "text-zinc-100"}`}>{value}</div>
       <div className="text-xs text-zinc-500">{label}</div>
     </div>
@@ -23,7 +24,7 @@ function ResultDetailPanel({ resultId, onClose }: { resultId: number; onClose: (
   if (!detail) return null;
   const attempt = detail.attempts[Math.min(tab, detail.attempts.length - 1)];
   return (
-    <div className="fixed inset-y-0 right-0 z-20 w-full max-w-2xl overflow-y-auto border-l border-zinc-700 bg-zinc-950 p-6 shadow-2xl">
+    <div className="fixed inset-y-0 right-0 z-20 w-full max-w-2xl overflow-y-auto border-l border-white/10 bg-black/90 p-6 shadow-2xl backdrop-blur-xl">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <div className="mb-1 flex items-center gap-2">
@@ -32,20 +33,20 @@ function ResultDetailPanel({ resultId, onClose }: { resultId: number; onClose: (
           </div>
           <h2 className="break-all font-mono text-sm text-zinc-200">{detail.node_id}</h2>
         </div>
-        <button onClick={onClose} className="rounded-md px-2 py-1 text-zinc-400 hover:bg-zinc-800">
+        <button onClick={onClose} className="rounded-md px-2 py-1 text-zinc-400 hover:bg-white/10">
           ✕
         </button>
       </div>
       <Link to={`../tests/${detail.test_case_id}`} relative="path" className="text-sm text-sky-400 hover:underline">
         View test history →
       </Link>
-      <div className="mt-4 flex gap-1 border-b border-zinc-800">
+      <div className="mt-4 flex gap-1 border-b border-white/10">
         {detail.attempts.map((item, index) => (
           <button
             key={item.id}
             onClick={() => setTab(index)}
             className={`rounded-t-md px-3 py-1.5 text-sm ${
-              index === tab ? "bg-zinc-800 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
+              index === tab ? "bg-white/10 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             Attempt {index + 1}
@@ -55,6 +56,9 @@ function ResultDetailPanel({ resultId, onClose }: { resultId: number; onClose: (
       </div>
       {attempt && (
         <div className="mt-4 space-y-5">
+          {(detail.status === "failed" || detail.status === "error" || detail.is_flaky_in_run) && (
+            <AiAnalysis resultId={detail.result_id} />
+          )}
           {attempt.error_message && (
             <div>
               <h3 className="mb-1 text-xs font-medium uppercase text-zinc-500">Error</h3>
@@ -77,7 +81,7 @@ function ResultDetailPanel({ resultId, onClose }: { resultId: number; onClose: (
           {attempt.stdout && (
             <div>
               <h3 className="mb-1 text-xs font-medium uppercase text-zinc-500">Stdout</h3>
-              <pre className="max-h-48 overflow-auto rounded-lg bg-zinc-900 p-3 text-xs text-zinc-400">
+              <pre className="max-h-48 overflow-auto rounded-lg border border-white/10 bg-black/60 p-3 text-xs text-zinc-400">
                 {attempt.stdout}
               </pre>
             </div>
@@ -110,15 +114,12 @@ export function RunDetailPage() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold text-zinc-100">Run #{run.id}</h1>
+        <h1 className="grad-text text-3xl font-bold">Run #{run.id}</h1>
         <StatusBadge status={run.status} />
-        {run.branch && <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400">{run.branch}</span>}
+        {run.branch && <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-zinc-400">{run.branch}</span>}
         <span className="text-sm text-zinc-500">{formatDate(run.started_at)}</span>
         {run.previous_run_id && (
-          <Link
-            to={`/p/${slug}/compare?base=${run.previous_run_id}&head=${run.id}`}
-            className="ml-auto rounded-md border border-zinc-700 px-3 py-1.5 text-sm text-sky-400 hover:bg-zinc-900"
-          >
+          <Link to={`/p/${slug}/compare?base=${run.previous_run_id}&head=${run.id}`} className="btn-grad ml-auto">
             Compare with previous
           </Link>
         )}
@@ -141,10 +142,10 @@ export function RunDetailPage() {
           <button
             key={item.value}
             onClick={() => setFilter(item.value)}
-            className={`rounded-full px-3 py-1 text-sm ${
+            className={`rounded-full px-3 py-1 text-sm transition ${
               filter === item.value
-                ? "bg-zinc-200 text-zinc-900"
-                : "border border-zinc-700 text-zinc-400 hover:bg-zinc-900"
+                ? "border border-blue-400/40 bg-blue-500/15 text-blue-200 shadow-[0_0_14px_rgba(61,106,254,0.25)]"
+                : "border border-white/10 text-zinc-400 hover:bg-white/5"
             }`}
           >
             {item.label}
@@ -154,12 +155,12 @@ export function RunDetailPage() {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search tests…"
-          className="ml-auto w-64 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-300 placeholder:text-zinc-600"
+          className="field ml-auto w-64"
         />
       </div>
-      <div className="overflow-hidden rounded-lg border border-zinc-800">
+      <div className="card overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-zinc-900 text-left text-xs uppercase text-zinc-500">
+          <thead className="bg-white/5 text-left text-xs uppercase text-zinc-500">
             <tr>
               <th className="px-4 py-2">Test</th>
               <th className="px-4 py-2">Status</th>
@@ -172,7 +173,7 @@ export function RunDetailPage() {
               <tr
                 key={row.result_id}
                 onClick={() => setSelected(row.result_id)}
-                className="cursor-pointer border-t border-zinc-800/60 hover:bg-zinc-900/60"
+                className="cursor-pointer border-t border-white/5 hover:bg-white/5"
               >
                 <td className="px-4 py-2">
                   <div className="font-mono text-xs text-zinc-300">{row.node_id}</div>

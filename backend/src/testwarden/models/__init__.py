@@ -3,6 +3,7 @@ from testwarden.models.run import Run
 from testwarden.models.testcase import TestCase
 from testwarden.models.result import TestAttempt, TestResult
 from testwarden.models.artifact import Artifact
+from testwarden.models.analysis import FailureAnalysis
 
 __all__ = [
     "Project",
@@ -12,4 +13,5 @@ __all__ = [
     "TestResult",
     "TestAttempt",
     "Artifact",
+    "FailureAnalysis",
 ]

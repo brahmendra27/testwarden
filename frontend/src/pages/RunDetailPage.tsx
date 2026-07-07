@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useResultDetail, useRun, useRunResults, useRunStrip } from "../api/hooks";
 import type { ResultRow } from "../api/types";
 import { AiAnalysis } from "../components/AiAnalysis";
+import { AutoFix } from "../components/AutoFix";
 import { ArtifactViewer } from "../components/ArtifactViewer";
 import { RunStrip } from "../components/RunStrip";
 import { StackTrace } from "../components/StackTrace";
@@ -57,7 +58,10 @@ function ResultDetailPanel({ resultId, onClose }: { resultId: number; onClose: (
       {attempt && (
         <div className="mt-4 space-y-5">
           {(detail.status === "failed" || detail.status === "error" || detail.is_flaky_in_run) && (
-            <AiAnalysis resultId={detail.result_id} />
+            <>
+              <AiAnalysis resultId={detail.result_id} />
+              <AutoFix resultId={detail.result_id} />
+            </>
           )}
           {attempt.error_message && (
             <div>

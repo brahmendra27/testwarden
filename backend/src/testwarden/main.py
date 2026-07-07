@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from testwarden.config import settings
 from testwarden.db import Base, SessionLocal, engine
-from testwarden.api import analysis, artifacts, compare, ingest, projects, runs, tests
+from testwarden.api import analysis, artifacts, autofix, compare, ingest, projects, runs, tests
 from testwarden.services.stats import sweep_interrupted_runs
 
 
@@ -33,6 +33,7 @@ def create_app() -> FastAPI:
     app.include_router(compare.router)
     app.include_router(artifacts.router)
     app.include_router(analysis.router)
+    app.include_router(autofix.router)
 
     @app.get("/api/v1/health")
     def health():

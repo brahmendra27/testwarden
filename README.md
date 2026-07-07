@@ -75,11 +75,23 @@ cd backend; ..\.venv\Scripts\python -m pytest      # 20 tests: API, stats, compa
 cd packages\pytest-testwarden; ..\..\.venv\Scripts\python -m pytest   # 7 plugin tests
 ```
 
+## AI features
+
+Both need `ANTHROPIC_API_KEY` set on the backend server (model: `claude-opus-4-8`).
+
+- **AI failure analysis** — the ✨ button on any failure sends the stack trace, retry history
+  and flake stats to Claude, which returns a root cause, a classification
+  (APP_BUG / TEST_BUG / FLAKY_TIMING / ENVIRONMENT) and a suggested fix. Cached per result.
+- **Auto-fix agent** — the 🔧 button launches an autonomous agent that clones the project's
+  `repo_url` (GitHub URL or local path), locates the root cause with read/edit/run-tests
+  tools, applies a minimal fix, re-runs the failing test to verify, commits to a
+  `testwarden/fix-*` branch and — with `GITHUB_TOKEN` set — opens a pull request.
+  Without a token the diff and branch are shown in the dashboard. Set the repo with
+  `PATCH /api/v1/projects/{slug} {"repo_url": "..."}`.
+
 ## Roadmap
 
-- **Phase 2 — auto-fix agent:** analyze a failure record (error + stack + screenshot + trace)
-  with the Claude API, generate a patch in the test repo, open a PR for review.
-  Hooks already in place: `failure_fingerprint`, `projects.repo_url`, `runs.commit_sha`.
-- **Phase 3 — API-testing agent:** generate + execute REST API tests (pytest + httpx) from an
+- **API-testing agent:** generate + execute REST API tests (pytest + httpx) from an
   OpenAPI spec, reporting through the same plugin (`framework="pytest-httpx"`).
 - **Selenium Java:** JUnit XML ingestion adapter translating into the same result envelope.
+- Auto-quarantine suggestions, failure clustering by fingerprint, Slack digests.

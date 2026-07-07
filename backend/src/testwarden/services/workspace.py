@@ -30,8 +30,10 @@ def _run_git(args: list[str], cwd: Path, timeout: int = 300) -> str:
 class FixWorkspace:
     def __init__(self, repo_url: str, root: Path):
         self.repo_url = repo_url
-        self.root = root
-        self.repo_dir = root / "repo"
+        # Absolute paths are required: Windows CreateProcess rejects a relative
+        # cwd, and git resolves a relative clone target against its own cwd.
+        self.root = Path(root).resolve()
+        self.repo_dir = self.root / "repo"
 
     # -- lifecycle -----------------------------------------------------------
     def clone(self, commit_sha: str | None = None) -> None:

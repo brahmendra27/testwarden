@@ -1,6 +1,11 @@
 from pathlib import Path
 
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Load .env from the working directory (repo root) into the process environment
+# so keys like ANTHROPIC_API_KEY / GITHUB_TOKEN are visible to the SDKs too.
+load_dotenv(encoding="utf-8-sig")  # BOM-tolerant: Windows editors often add one
 
 
 class Settings(BaseSettings):

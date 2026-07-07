@@ -12,6 +12,7 @@ import { TestDetailPage } from "./pages/TestDetailPage";
 import { FlakyTestsPage } from "./pages/FlakyTestsPage";
 import { ComparePage } from "./pages/ComparePage";
 import { ApiAgentPage } from "./pages/ApiAgentPage";
+import { ErrorPage } from "./pages/ErrorPage";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 15_000 } },
@@ -20,6 +21,7 @@ const queryClient = new QueryClient({
 const router = createBrowserRouter([
   {
     element: <Layout />,
+    errorElement: <ErrorPage />,
     children: [
       { path: "/", element: <ProjectsPage /> },
       { path: "/p/:slug/overview", element: <OverviewPage /> },

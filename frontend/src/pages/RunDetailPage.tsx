@@ -1,5 +1,10 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+
+function useSlug() {
+  const { slug = "" } = useParams();
+  return slug;
+}
 import { useResultDetail, useRun, useRunResults, useRunStrip } from "../api/hooks";
 import type { ResultRow } from "../api/types";
 import { AiAnalysis } from "../components/AiAnalysis";
@@ -20,6 +25,7 @@ function Stat({ label, value, tone }: { label: string; value: number | string; t
 }
 
 function ResultDetailPanel({ resultId, onClose }: { resultId: number; onClose: () => void }) {
+  const slug = useSlug();
   const { data: detail } = useResultDetail(resultId);
   const [tab, setTab] = useState(0);
   if (!detail) return null;
@@ -38,7 +44,7 @@ function ResultDetailPanel({ resultId, onClose }: { resultId: number; onClose: (
           ✕
         </button>
       </div>
-      <Link to={`../tests/${detail.test_case_id}`} relative="path" className="text-sm text-sky-400 hover:underline">
+      <Link to={`/p/${slug}/tests/${detail.test_case_id}`} className="text-sm text-sky-400 hover:underline">
         View test history →
       </Link>
       <div className="mt-4 flex gap-1 border-b border-white/10">

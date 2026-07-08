@@ -1,6 +1,6 @@
 # FlakeLens
 
-Self-hosted test automation observability platform (inspired by [kinora.dev](https://kinora.dev/)).
+Self-hosted test automation observability platform .
 It ingests results from **Playwright + pytest** suites, tracks run history, records failures with
 full context (stack traces, screenshots, Playwright traces), detects **flaky tests**, and compares runs.
 

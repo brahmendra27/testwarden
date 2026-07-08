@@ -10,8 +10,8 @@ from playwright.sync_api import Page, expect
 
 def test_home_title(page: Page, site_url: str):
     page.goto(site_url)
-    expect(page).to_have_title("TestWarden Demo Shop")
-    expect(page.locator("#page-title")).to_have_text("TestWarden Demo Shop")
+    expect(page).to_have_title("FlakeLens Demo Shop")
+    expect(page.locator("#page-title")).to_have_text("FlakeLens Demo Shop")
 
 
 def test_nav_links_visible(page: Page, site_url: str):

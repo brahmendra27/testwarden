@@ -14,7 +14,7 @@ export function ProjectsPage() {
       <div className="mt-20 text-center text-zinc-500">
         <p className="text-lg">No projects yet.</p>
         <p className="mt-2 text-sm">
-          Seed demo data with <code className="rounded bg-white/10 px-1.5 py-0.5">python -m testwarden.seed</code>{" "}
+          Seed demo data with <code className="rounded bg-white/10 px-1.5 py-0.5">python -m flakelens.seed</code>{" "}
           or point the pytest reporter at this server.
         </p>
       </div>

@@ -6,8 +6,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from testwarden.services.autofix import TOOLS, run_agent
-from testwarden.services.workspace import FixWorkspace, WorkspaceError
+from flakelens.services.autofix import TOOLS, run_agent
+from flakelens.services.workspace import FixWorkspace, WorkspaceError
 
 
 @pytest.fixture()
@@ -37,7 +37,7 @@ def workspace(source_repo, tmp_path):
 
 def test_clone_branch_edit_diff_commit(workspace):
     assert workspace.default_branch() == "main"
-    workspace.create_branch("testwarden/fix-add-1")
+    workspace.create_branch("flakelens/fix-add-1")
     assert "calc.py" in workspace.list_files("*.py")
     assert "return a - b" in workspace.read_file("calc.py")
 
@@ -95,7 +95,7 @@ class FakeClient:
 
 
 def test_agent_loop_with_fake_client(workspace):
-    workspace.create_branch("testwarden/fix-add-2")
+    workspace.create_branch("flakelens/fix-add-2")
     log_lines = []
     verdict = run_agent(FakeClient(), workspace, "fix the failing test", log_lines.append)
     assert verdict == {"outcome": "fixed", "summary": "Fixed subtraction typo."}
@@ -139,7 +139,7 @@ def test_autofix_endpoints(client, project_key, db, monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
     executed = []
     monkeypatch.setattr(
-        "testwarden.api.autofix.execute_autofix_job", lambda job_id: executed.append(job_id)
+        "flakelens.api.autofix.execute_autofix_job", lambda job_id: executed.append(job_id)
     )
     body = client.post(f"/api/v1/results/{result_id}/autofix").json()
     assert body["status"] == "queued"

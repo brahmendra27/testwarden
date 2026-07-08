@@ -83,8 +83,8 @@ export function AutoFix({ resultId }: { resultId: number }) {
   return (
     <div className="rounded-xl border border-violet-400/25 bg-violet-500/[0.06] p-4">
       <div className="mb-2 flex items-center gap-2">
-        <span className="text-base">🔧</span>
-        <h3 className="text-sm font-semibold text-violet-200">Auto-fix agent</h3>
+        <span className="text-base">🩹</span>
+        <h3 className="text-sm font-semibold text-violet-200">SelfHeal agent</h3>
         {job && (
           <span
             className={`ml-auto rounded px-2 py-0.5 text-xs font-medium ${
@@ -108,7 +108,7 @@ export function AutoFix({ resultId }: { resultId: number }) {
             minimal fix, re-runs the failing test to verify, and opens a pull request for review.
           </p>
           <button onClick={() => start.mutate()} className="btn-grad" disabled={!state}>
-            🔧 Launch auto-fix agent
+            🩹 Launch SelfHeal agent
           </button>
           {!state?.available && state && (
             <p className="mt-2 text-xs text-zinc-500">

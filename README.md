@@ -1,4 +1,4 @@
-# TestWarden
+# FlakeLens
 
 Self-hosted test automation observability platform (inspired by [kinora.dev](https://kinora.dev/)).
 It ingests results from **Playwright + pytest** suites, tracks run history, records failures with
@@ -11,14 +11,14 @@ full context (stack traces, screenshots, Playwright traces), detects **flaky tes
 - **Failure records** — per-attempt stack traces, stdout, inline screenshots, Playwright trace downloads
 - **Flaky detection** — cross-run flip-flop rate *and* intra-run retry recoveries (pytest-rerunfailures aware)
 - **Run comparison** — newly failing / fixed / newly flaky / still failing between any two runs
-- **`pytest-testwarden` reporter** — streams results + artifacts during the run; never fails your session
+- **`pytest-flakelens` reporter** — streams results + artifacts during the run; never fails your session
 
 ## Architecture
 
 ```
 backend/                    FastAPI + SQLAlchemy (SQLite by default, Postgres via docker-compose)
 frontend/                   React + TypeScript + Vite + Tailwind dashboard
-packages/pytest-testwarden/ pytest plugin that reports into the ingestion API
+packages/pytest-flakelens/ pytest plugin that reports into the ingestion API
 examples/sample-playwright-project/  offline demo suite (1 flaky + 1 broken test on purpose)
 ```
 
@@ -30,12 +30,12 @@ and API-test runners can be added as adapters without schema changes.
 ```powershell
 # 1. Install
 python -m venv .venv
-.\.venv\Scripts\pip install -e ".\backend[dev]" -e ".\packages\pytest-testwarden[dev]" pytest-playwright
+.\.venv\Scripts\pip install -e ".\backend[dev]" -e ".\packages\pytest-flakelens[dev]" pytest-playwright
 .\.venv\Scripts\python -m playwright install chromium
 cd frontend; npm install; cd ..
 
 # 2. Seed demo data (prints the ingestion API key)
-.\.venv\Scripts\python -m testwarden.seed
+.\.venv\Scripts\python -m flakelens.seed
 
 # 3. Run everything + the sample suite
 .\scripts\demo.ps1
@@ -46,7 +46,7 @@ sample suite just reported — including an amber flaky test with retry attempts
 failure with screenshot + trace.
 
 Prefer Postgres? `docker compose up -d db` and set
-`TESTWARDEN_DATABASE_URL=postgresql+psycopg://testwarden:testwarden@localhost:5433/testwarden`
+`FLAKELENS_DATABASE_URL=postgresql+psycopg://flakelens:flakelens@localhost:5433/flakelens`
 (install `backend[postgres]`).
 
 ## Report your own suite
@@ -55,24 +55,24 @@ Prefer Postgres? `docker compose up -d db` and set
 # pytest.ini
 [pytest]
 addopts = --screenshot only-on-failure --tracing retain-on-failure --reruns 2
-testwarden_url = http://localhost:8787
+flakelens_url = http://localhost:8787
 ```
 
 ```powershell
-pip install pytest-testwarden
-$env:TESTWARDEN_API_KEY = "twk_..."   # create a project + key, or use the seeded one
+pip install pytest-flakelens
+$env:FLAKELENS_API_KEY = "flk_..."   # create a project + key, or use the seeded one
 pytest
 ```
 
-Branch/commit metadata is picked up from `TESTWARDEN_BRANCH`/`TESTWARDEN_COMMIT`
+Branch/commit metadata is picked up from `FLAKELENS_BRANCH`/`FLAKELENS_COMMIT`
 (or `GITHUB_*` vars automatically in GitHub Actions). Attach extra files with the
-`testwarden_attach(path, kind="log")` fixture. Note: `pytest-xdist` is not supported yet.
+`flakelens_attach(path, kind="log")` fixture. Note: `pytest-xdist` is not supported yet.
 
 ## Tests
 
 ```powershell
 cd backend; ..\.venv\Scripts\python -m pytest      # 20 tests: API, stats, compare
-cd packages\pytest-testwarden; ..\..\.venv\Scripts\python -m pytest   # 7 plugin tests
+cd packages\pytest-flakelens; ..\..\.venv\Scripts\python -m pytest   # 7 plugin tests
 ```
 
 ## AI features
@@ -90,7 +90,7 @@ Both need `ANTHROPIC_API_KEY` set on the backend server (model: `claude-opus-4-8
 - **Auto-fix agent** — the 🔧 button launches an autonomous agent that clones the project's
   `repo_url` (GitHub URL or local path), locates the root cause with read/edit/run-tests
   tools, applies a minimal fix, re-runs the failing test to verify, commits to a
-  `testwarden/fix-*` branch and — with `GITHUB_TOKEN` set — opens a pull request.
+  `flakelens/fix-*` branch and — with `GITHUB_TOKEN` set — opens a pull request.
   Without a token the diff and branch are shown in the dashboard. Set the repo with
   `PATCH /api/v1/projects/{slug} {"repo_url": "..."}`.
 

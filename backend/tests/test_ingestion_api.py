@@ -34,7 +34,7 @@ def test_auth_required(client):
     response = client.post(
         "/api/v1/ingest/runs",
         json={"run_uuid": str(uuid.uuid4())},
-        headers=_headers("twk_" + "0" * 40),
+        headers=_headers("flk_" + "0" * 40),
     )
     assert response.status_code == 401
 
@@ -183,7 +183,7 @@ def test_stable_identity_across_runs(client, project_key, db):
         client.post(f"/api/v1/ingest/runs/{run_uuid}/finish", headers=_headers(key))
     # Same logical test -> one test case with two history entries.
     from sqlalchemy import select
-    from testwarden.models import TestCase
+    from flakelens.models import TestCase
     project_id = project_key[0].id
     cases = db.scalars(select(TestCase).where(TestCase.project_id == project_id)).all()
     assert len(cases) == 1

@@ -9,10 +9,10 @@ interface CreatedProject {
 
 function Snippet({ created }: { created: CreatedProject }) {
   const ini = `[pytest]
-testwarden_url = http://localhost:8787
+flakelens_url = http://localhost:8787
 ; add to your suite's pytest.ini / pyproject`;
-  const shell = `pip install -e <path-to-testwarden>/packages/pytest-testwarden
-$env:TESTWARDEN_API_KEY = "${created.api_key}"
+  const shell = `pip install -e <path-to-flakelens>/packages/pytest-flakelens
+$env:FLAKELENS_API_KEY = "${created.api_key}"
 pytest`;
   return (
     <div className="space-y-3 text-left">

@@ -1,8 +1,8 @@
-# Start TestWarden backend + frontend for local development (SQLite, no Docker needed).
+# Start FlakeLens backend + frontend for local development (SQLite, no Docker needed).
 $root = Split-Path $PSScriptRoot -Parent
 
 Start-Process powershell -ArgumentList "-NoExit", "-Command",
-    "cd '$root'; .\.venv\Scripts\python -m uvicorn testwarden.main:app --port 8787 --reload"
+    "cd '$root'; .\.venv\Scripts\python -m uvicorn flakelens.main:app --port 8787 --reload"
 Start-Process powershell -ArgumentList "-NoExit", "-Command",
     "cd '$root\frontend'; npm run dev"
 

@@ -1,17 +1,17 @@
 import os
 import tempfile
 
-_tmp = tempfile.mkdtemp(prefix="testwarden-tests-")
-os.environ["TESTWARDEN_DATABASE_URL"] = f"sqlite:///{_tmp}/test.db"
-os.environ["TESTWARDEN_ARTIFACT_DIR"] = f"{_tmp}/artifacts"
+_tmp = tempfile.mkdtemp(prefix="flakelens-tests-")
+os.environ["FLAKELENS_DATABASE_URL"] = f"sqlite:///{_tmp}/test.db"
+os.environ["FLAKELENS_ARTIFACT_DIR"] = f"{_tmp}/artifacts"
 
 import pytest
 from fastapi.testclient import TestClient
 
-from testwarden.auth import create_api_key
-from testwarden.db import Base, SessionLocal, engine
-from testwarden.main import app
-from testwarden.models import Project
+from flakelens.auth import create_api_key
+from flakelens.db import Base, SessionLocal, engine
+from flakelens.main import app
+from flakelens.models import Project
 
 
 @pytest.fixture(scope="session")

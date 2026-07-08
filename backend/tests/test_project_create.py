@@ -3,7 +3,7 @@ def test_create_project_returns_key_once(client):
     assert response.status_code == 200
     body = response.json()
     assert body["slug"] == "my-web-app"
-    assert body["api_key"].startswith("twk_")
+    assert body["api_key"].startswith("flk_")
 
     # key works for ingestion
     created = client.post(
@@ -18,5 +18,5 @@ def test_create_project_returns_key_once(client):
 
     # additional key can be minted
     extra = client.post(f"/api/v1/projects/{body['slug']}/keys").json()
-    assert extra["api_key"].startswith("twk_")
+    assert extra["api_key"].startswith("flk_")
     assert extra["api_key"] != body["api_key"]

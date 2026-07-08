@@ -1,4 +1,4 @@
-from testwarden.services.stats import compute_case_stats, window_token
+from flakelens.services.stats import compute_case_stats, window_token
 
 
 def entries(tokens, duration=1000):

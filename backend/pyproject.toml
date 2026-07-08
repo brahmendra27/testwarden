@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "testwarden-server"
+name = "flakelens-server"
 version = "0.1.0"
-description = "TestWarden - self-hosted test automation observability platform"
+description = "FlakeLens - self-hosted test automation observability platform"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.110",

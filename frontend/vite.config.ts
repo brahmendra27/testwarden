@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/api": process.env.TESTWARDEN_API ?? "http://localhost:8787",
+      "/api": process.env.FLAKELENS_API ?? "http://localhost:8787",
     },
   },
 });

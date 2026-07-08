@@ -2,9 +2,9 @@
 import uuid
 from types import SimpleNamespace
 
-from testwarden.services.autofix import run_agent
-from testwarden.services.apitest import SYSTEM_PROMPT, _collect_code, _fetch_spec
-from testwarden.services.workspace import FixWorkspace
+from flakelens.services.autofix import run_agent
+from flakelens.services.apitest import SYSTEM_PROMPT, _collect_code, _fetch_spec
+from flakelens.services.workspace import FixWorkspace
 
 GENERATED_TEST = '''import httpx
 
@@ -87,7 +87,7 @@ def test_api_agent_endpoints(client, project_key, monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
     executed = []
     monkeypatch.setattr(
-        "testwarden.api.apitest.execute_apitest_job", lambda job_id: executed.append(job_id)
+        "flakelens.api.apitest.execute_apitest_job", lambda job_id: executed.append(job_id)
     )
     body = client.post(
         f"/api/v1/projects/{slug}/api-agent",

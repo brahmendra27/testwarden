@@ -4,7 +4,7 @@
     {
       "name": "backend",
       "runtimeExecutable": ".venv\\Scripts\\python.exe",
-      "runtimeArgs": ["-m", "uvicorn", "testwarden.main:app", "--port", "8787"],
+      "runtimeArgs": ["-m", "uvicorn", "flakelens.main:app", "--port", "8787"],
       "port": 8787
     },
     {

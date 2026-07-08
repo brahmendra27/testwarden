@@ -1,15 +1,15 @@
 # One-shot demo: seed data, start servers, run the sample Playwright suite.
 # Prerequisites (once):
 #   python -m venv .venv
-#   .\.venv\Scripts\pip install -e ".\backend[dev]" -e ".\packages\pytest-testwarden[dev]" pytest-playwright
+#   .\.venv\Scripts\pip install -e ".\backend[dev]" -e ".\packages\pytest-flakelens[dev]" pytest-playwright
 #   .\.venv\Scripts\python -m playwright install chromium
 #   cd frontend; npm install
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
 
-if (-not (Test-Path "$root\data\testwarden.db")) {
+if (-not (Test-Path "$root\data\flakelens.db")) {
     Write-Host "Seeding demo data..."
-    .\.venv\Scripts\python -m testwarden.seed
+    .\.venv\Scripts\python -m flakelens.seed
 }
 
 & "$PSScriptRoot\dev.ps1"
@@ -23,7 +23,7 @@ while ((Get-Date) -lt $deadline) {
     } catch { Start-Sleep -Milliseconds 500 }
 }
 
-$env:TESTWARDEN_API_KEY = (Get-Content "$root\data\demo_api_key.txt" -Raw).Trim()
+$env:FLAKELENS_API_KEY = (Get-Content "$root\data\demo_api_key.txt" -Raw).Trim()
 Write-Host "Running the sample Playwright suite (1 flaky + 1 broken test on purpose)..."
 Set-Location "$root\examples\sample-playwright-project"
 & "$root\.venv\Scripts\python" -m pytest -q

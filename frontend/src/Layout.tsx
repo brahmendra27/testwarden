@@ -26,7 +26,7 @@ export function Layout() {
         <div className="mb-6 flex items-center gap-2.5 px-2">
           <span className="glow-dot" />
           <span className="grad-text text-lg font-bold tracking-tight" style={{ fontFamily: "Plus Jakarta Sans" }}>
-            TestWarden
+            FlakeLens
           </span>
         </div>
         <nav className="space-y-1">

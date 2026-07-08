@@ -12,6 +12,10 @@ full context (stack traces, screenshots, Playwright traces), detects **flaky tes
 - **Flaky detection** — cross-run flip-flop rate *and* intra-run retry recoveries (pytest-rerunfailures aware)
 - **Run comparison** — newly failing / fixed / newly flaky / still failing between any two runs
 - **`pytest-flakelens` reporter** — streams results + artifacts during the run; never fails your session
+- **Quarantine-and-heal loop** — quarantine a flaky test via an agent-authored PR
+  (`@pytest.mark.quarantine` runs it as non-strict xfail, so CI goes green while it keeps
+  reporting real outcomes), let SelfHeal fix it in the background, then release it with
+  another PR once it posts a clean streak. The Quarantine page tracks the whole lifecycle.
 
 ## Architecture
 

@@ -34,6 +34,21 @@ def window_token(status: str, is_flaky_in_run: bool) -> str | None:
     return None
 
 
+def result_token(result) -> str | None:
+    """Window token for a stored TestResult, honoring quarantine.
+
+    Quarantined tests run under xfail so CI stays green, but their real
+    outcome (xpassed = healthy, xfailed = still broken) must keep feeding the
+    flake window — that signal is what eventually releases them.
+    """
+    if (result.extras or {}).get("quarantined"):
+        if result.status == "xpassed":
+            return "P"
+        if result.status == "xfailed":
+            return "F"
+    return window_token(result.status, result.is_flaky_in_run)
+
+
 def compute_case_stats(entries: list[dict]) -> dict:
     tokens = [e["t"] for e in entries]
     n = len(tokens)
@@ -66,7 +81,7 @@ def compute_case_stats(entries: list[dict]) -> dict:
 def apply_result_to_case(case: TestCase, result: TestResult, run_id: int) -> None:
     """Append one final result to the case's rolling window and refresh stats."""
     case.last_status = result.status
-    token = window_token(result.status, result.is_flaky_in_run)
+    token = result_token(result)
     if token is None:
         return
     entries = list(case.recent_statuses or [])
@@ -122,7 +137,7 @@ def recompute_project_stats(db: Session, project_id: int) -> int:
         last_status = None
         for result, run_id in rows:
             last_status = result.status
-            token = window_token(result.status, result.is_flaky_in_run)
+            token = result_token(result)
             if token is not None:
                 entries.append({"t": token, "d": result.duration_ms, "r": run_id})
         entries = entries[-STATS_WINDOW:]

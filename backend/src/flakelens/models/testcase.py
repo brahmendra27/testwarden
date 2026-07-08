@@ -34,3 +34,8 @@ class TestCase(Base):
     avg_duration_ms: Mapped[int] = mapped_column(default=0)
     p95_duration_ms: Mapped[int] = mapped_column(default=0)
     stats_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Quarantine-and-heal loop: set when the quarantine agent lands the marker.
+    quarantined_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    quarantine_branch: Mapped[str | None] = mapped_column(Text, nullable=True)
+    quarantine_pr_url: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -35,7 +35,27 @@ def _setting(config, ini_name: str, env_name: str) -> str:
     return os.environ.get(env_name) or str(config.getini(ini_name) or "")
 
 
+def pytest_collection_modifyitems(config, items):
+    """Quarantined tests still run, but under non-strict xfail so CI stays green.
+
+    Their true outcome (xpassed = healthy, xfailed = still broken) is reported
+    to FlakeLens, which decides when they are ready to be released.
+    """
+    for item in items:
+        if item.get_closest_marker("quarantine") is not None:
+            item.add_marker(
+                pytest.mark.xfail(reason="quarantined by FlakeLens", strict=False)
+            )
+            plugin = getattr(config, "_flakelens", None)
+            if plugin is not None:
+                plugin.quarantined_nodeids.add(item.nodeid)
+
+
 def pytest_configure(config):
+    config.addinivalue_line(
+        "markers",
+        "quarantine: test is quarantined by FlakeLens - runs as non-strict xfail so CI stays green",
+    )
     url = os.environ.get("FLAKELENS_URL") or config.getoption("--flakelens-url") or str(
         config.getini("flakelens_url") or ""
     )
@@ -112,6 +132,7 @@ class FlakelensPlugin:
             _setting(config, "flakelens_framework", "FLAKELENS_FRAMEWORK")
             or _detect_framework(config)
         )
+        self.quarantined_nodeids: set[str] = set()
         self._states: dict[str, _CaseState] = {}
         self._closed: list[tuple[dict, list[list[tuple[Path, str]]]]] = []
         self._output_snapshot: dict = {}
@@ -231,6 +252,11 @@ class FlakelensPlugin:
         parts = normalized.split("::")
         bracket = normalized[normalized.find("[") + 1 : normalized.rfind("]")] if "[" in normalized else ""
         browser = next((b for b in BROWSERS if b in bracket), None)
+        extras: dict = {}
+        if browser:
+            extras["browser"] = browser
+        if nodeid in self.quarantined_nodeids:
+            extras["quarantined"] = True
         envelope = {
             "result_ref": str(uuid.uuid4()),
             "framework": self.framework,
@@ -241,7 +267,7 @@ class FlakelensPlugin:
             "status": final["status"],
             "duration_ms": final["duration_ms"],
             "attempts": state.finished_attempts,
-            "extras": {"browser": browser} if browser else {},
+            "extras": extras,
         }
         self._closed.append((envelope, state.attempt_artifacts))
         if len(self._closed) >= self.batch_size:

@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from flakelens.config import settings
-from flakelens.db import Base, SessionLocal, engine
+from flakelens.db import Base, SessionLocal, apply_additive_migrations, engine
 from flakelens.api import (
     analysis,
     apitest,
@@ -13,6 +13,7 @@ from flakelens.api import (
     compare,
     ingest,
     projects,
+    quarantine,
     runs,
     tests,
 )
@@ -23,6 +24,7 @@ from flakelens.services.stats import sweep_interrupted_runs
 async def lifespan(app: FastAPI):
     # Idempotent for dev/SQLite; Postgres deployments should also run alembic.
     Base.metadata.create_all(engine)
+    apply_additive_migrations(engine)
     with SessionLocal() as db:
         sweep_interrupted_runs(db, settings.interrupted_run_ttl_minutes)
     yield
@@ -45,6 +47,7 @@ def create_app() -> FastAPI:
     app.include_router(analysis.router)
     app.include_router(autofix.router)
     app.include_router(apitest.router)
+    app.include_router(quarantine.router)
 
     @app.get("/api/v1/health")
     def health():

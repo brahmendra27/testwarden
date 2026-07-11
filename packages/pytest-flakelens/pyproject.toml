@@ -6,7 +6,23 @@ build-backend = "setuptools.build_meta"
 name = "pytest-flakelens"
 version = "0.1.0"
 description = "Pytest reporter that streams test results, retries and artifacts to a FlakeLens server"
+readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.10"
+authors = [{ name = "Brahmendra", email = "brahmendrasdet@gmail.com" }]
+keywords = ["pytest", "playwright", "flaky", "test", "observability", "reporter", "flakelens"]
+classifiers = [
+    "Framework :: Pytest",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Software Development :: Quality Assurance",
+]
 dependencies = [
     "pytest>=7.0",
     "httpx>=0.24",
@@ -14,6 +30,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest-rerunfailures>=12.0"]
+
+[project.urls]
+Homepage = "https://github.com/brahmendra27/testwarden"
+Repository = "https://github.com/brahmendra27/testwarden"
+Issues = "https://github.com/brahmendra27/testwarden/issues"
 
 [project.entry-points.pytest11]
 flakelens = "flakelens_reporter.plugin"

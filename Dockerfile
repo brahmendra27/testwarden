@@ -32,4 +32,5 @@ RUN chmod +x /app/docker-entrypoint.sh && mkdir -p /data/artifacts
 
 EXPOSE 8787
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
-CMD ["uvicorn", "flakelens.main:app", "--host", "0.0.0.0", "--port", "8787"]
+# Shell form so $PORT (injected by Render/Railway/Fly) expands; falls back to 8787.
+CMD uvicorn flakelens.main:app --host 0.0.0.0 --port ${PORT:-8787}

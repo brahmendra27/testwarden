@@ -1,0 +1,26 @@
+# One-click hosted demo on Render (https://render.com) — a Render Blueprint.
+# Deploys the single Docker image (API + dashboard) with an ephemeral SQLite DB
+# that reseeds demo data on every deploy. No AI key = safe, zero-cost public demo
+# (the agent buttons show "requires ANTHROPIC_API_KEY" and don't run).
+#
+# To deploy: push this repo to GitHub, then on Render → New → Blueprint → pick
+# the repo. Or use the Deploy-to-Render button in the README.
+services:
+  - type: web
+    name: flakelens-demo
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: FLAKELENS_SEED_ON_START
+        value: "true"
+      # Ephemeral SQLite is fine for a demo (resets on redeploy). For a real
+      # deploy, attach a Postgres and set FLAKELENS_DATABASE_URL instead.
+      - key: FLAKELENS_DATABASE_URL
+        value: sqlite:////tmp/flakelens.db
+      - key: FLAKELENS_SECURE_COOKIES
+        value: "true"
+      # To make it a *private* demo, set an access token here (or in the Render
+      # dashboard) and share it with viewers:
+      # - key: FLAKELENS_ACCESS_TOKEN
+      #   generateValue: true

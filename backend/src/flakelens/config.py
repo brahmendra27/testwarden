@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     access_token: str = ""
     # Send the session cookie with Secure (HTTPS-only). Enable behind TLS.
     secure_cookies: bool = False
+    # Seed demo data on startup if the database has no projects (hosted demo).
+    seed_on_start: bool = False
 
 
 settings = Settings()

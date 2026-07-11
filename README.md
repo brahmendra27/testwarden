@@ -1,8 +1,19 @@
 # FlakeLens
 
-Self-hosted test automation observability platform .
-It ingests results from **Playwright + pytest** suites, tracks run history, records failures with
-full context (stack traces, screenshots, Playwright traces), detects **flaky tests**, and compares runs.
+**Every tool tells you a test is flaky. FlakeLens fixes it.**
+
+Self-hosted test observability with AI agents that write new tests from plain English and fix
+flaky ones with a pull request. It ingests results from **Playwright + pytest** (or **JUnit XML**
+from any framework), tracks run history, records failures with full context, detects **flaky
+tests**, and closes the loop: reproduce → self-heal → quarantine → verify.
+
+```bash
+pip install pytest-flakelens          # the reporter (see packages/pytest-flakelens)
+docker compose up                     # or self-host the dashboard + API
+```
+
+One-click demo deploy → [`docs/HOSTED_DEMO.md`](docs/HOSTED_DEMO.md). Launch assets →
+[`docs/VIDEO_STORYBOARD.md`](docs/VIDEO_STORYBOARD.md).
 
 ## Features (v0.1 MVP)
 

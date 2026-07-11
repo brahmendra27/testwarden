@@ -57,6 +57,23 @@ async def _nightly_crew_scheduler():
             await asyncio.to_thread(execute_crew_run, run_id)
 
 
+def _seed_demo_if_empty() -> None:
+    """Populate the demo project on a fresh hosted deploy (best-effort)."""
+    from sqlalchemy import select
+
+    from flakelens.models import Project
+
+    with SessionLocal() as db:
+        if db.scalar(select(Project.id).limit(1)) is not None:
+            return
+    try:
+        from flakelens import seed
+
+        seed.main()
+    except Exception:
+        pass  # never block startup on demo seeding
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     import asyncio
@@ -66,6 +83,8 @@ async def lifespan(app: FastAPI):
     apply_additive_migrations(engine)
     with SessionLocal() as db:
         sweep_interrupted_runs(db, settings.interrupted_run_ttl_minutes)
+    if settings.seed_on_start:
+        _seed_demo_if_empty()
     scheduler = None
     if 0 <= settings.crew_hour <= 23:
         scheduler = asyncio.create_task(_nightly_crew_scheduler())

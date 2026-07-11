@@ -110,6 +110,10 @@ All evidence sent to the LLM (failure context, SelfHeal task, OpenAPI specs) is 
 through a secret-scrubber (`services/redact.py`) that redacts bearer tokens, API keys, JWTs,
 URL-embedded passwords, cookies, and sensitive key/value pairs.
 
+- **Write a test in plain English** — the author agent takes a plain-English description + a
+  URL, drives your app in a real browser to discover the actual selectors, writes a
+  Playwright + pytest test in best-practice locator style, runs it to prove it passes, and
+  (with a repo) opens a PR. Built for users with minimal automation knowledge — no code required.
 - **AI failure analysis** — the ✨ button on any failure sends the stack trace, retry history
   and flake stats to Claude, which returns a root cause, a classification
   (APP_BUG / TEST_BUG / FLAKY_TIMING / ENVIRONMENT) and a suggested fix. Cached per result.

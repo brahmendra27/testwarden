@@ -11,6 +11,7 @@ from flakelens.api import (
     apitest,
     artifacts,
     auth,
+    author,
     autofix,
     compare,
     ingest,
@@ -109,6 +110,7 @@ def create_app() -> FastAPI:
     app.include_router(quarantine.router)
     app.include_router(reproducer.router)
     app.include_router(crew.router)
+    app.include_router(author.router)
 
     @app.get("/api/v1/health")
     def health():

@@ -8,10 +8,12 @@ from flakelens.models.agentjob import AgentJob
 from flakelens.models.apitest import ApiTestJob
 from flakelens.models.reprojob import ReproJob
 from flakelens.models.crewrun import CrewRun
+from flakelens.models.authorjob import AuthorJob
 
 __all__ = [
     "AgentJob",
     "ApiTestJob",
+    "AuthorJob",
     "CrewRun",
     "ReproJob",
     "Project",

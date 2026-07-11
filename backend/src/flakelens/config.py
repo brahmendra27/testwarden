@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     # Nightly maintenance crew: hour of day (0-23, server local time) to run a
     # pass over every project. -1 disables the schedule (manual runs still work).
     crew_hour: int = -1
+    # Shared access token gating the dashboard + read/agent APIs. Empty = open
+    # mode (no login; fine for local dev). Ingestion always uses per-project keys.
+    access_token: str = ""
+    # Send the session cookie with Secure (HTTPS-only). Enable behind TLS.
+    secure_cookies: bool = False
 
 
 settings = Settings()

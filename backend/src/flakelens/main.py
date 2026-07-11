@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from flakelens.config import settings
 from flakelens.db import Base, SessionLocal, apply_additive_migrations, engine
@@ -9,6 +10,7 @@ from flakelens.api import (
     analysis,
     apitest,
     artifacts,
+    auth,
     autofix,
     compare,
     ingest,
@@ -19,6 +21,7 @@ from flakelens.api import (
     runs,
     tests,
 )
+from flakelens.api.auth import is_authenticated
 from flakelens.services.crew import execute_crew_run
 from flakelens.services.stats import sweep_interrupted_runs
 
@@ -75,7 +78,25 @@ def create_app() -> FastAPI:
         allow_origins=settings.cors_origins,
         allow_methods=["*"],
         allow_headers=["*"],
+        allow_credentials=True,
     )
+
+    # Open paths: ingestion (per-project key), health (docker probe), auth, and
+    # the SPA/static assets. Everything else under /api requires the token.
+    _OPEN_PREFIXES = ("/api/v1/ingest", "/api/v1/health", "/api/v1/auth")
+
+    @app.middleware("http")
+    async def _dashboard_auth(request, call_next):
+        if settings.access_token and request.method != "OPTIONS":
+            path = request.url.path
+            if path.startswith("/api/") and not path.startswith(_OPEN_PREFIXES):
+                if not is_authenticated(request):
+                    return JSONResponse(
+                        {"detail": "Authentication required"}, status_code=401
+                    )
+        return await call_next(request)
+
+    app.include_router(auth.router)
     app.include_router(ingest.router)
     app.include_router(projects.router)
     app.include_router(runs.router)

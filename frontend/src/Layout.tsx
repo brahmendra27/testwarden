@@ -1,4 +1,28 @@
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useParams } from "react-router-dom";
+
+function SignOut() {
+  const [required, setRequired] = useState(false);
+  useEffect(() => {
+    fetch("/api/v1/auth/status")
+      .then((r) => r.json())
+      .then((s) => setRequired(Boolean(s.required)))
+      .catch(() => {});
+  }, []);
+  if (!required) return null;
+  const logout = async () => {
+    await fetch("/api/v1/auth/logout", { method: "POST" });
+    window.location.reload();
+  };
+  return (
+    <button
+      onClick={logout}
+      className="mt-auto rounded-lg px-3 py-2 text-left text-sm text-zinc-500 hover:bg-white/5 hover:text-zinc-300"
+    >
+      Sign out
+    </button>
+  );
+}
 
 function SideLink({ to, label, end }: { to: string; label: string; end?: boolean }) {
   return (
@@ -22,7 +46,7 @@ export function Layout() {
   const { slug } = useParams();
   return (
     <div className="flex min-h-screen">
-      <aside className="w-56 shrink-0 border-r border-white/10 bg-white/[0.02] p-4 backdrop-blur-sm">
+      <aside className="flex w-56 shrink-0 flex-col border-r border-white/10 bg-white/[0.02] p-4 backdrop-blur-sm">
         <div className="mb-6 flex items-center gap-2.5 px-2">
           <span className="glow-dot" />
           <span className="grad-text text-lg font-bold tracking-tight" style={{ fontFamily: "Plus Jakarta Sans" }}>
@@ -46,6 +70,7 @@ export function Layout() {
             </>
           )}
         </nav>
+        <SignOut />
       </aside>
       <main className="min-w-0 flex-1 p-6">
         <Outlet />

@@ -125,7 +125,23 @@ URL-embedded passwords, cookies, and sensitive key/value pairs.
   Without a token the diff and branch are shown in the dashboard. Set the repo with
   `PATCH /api/v1/projects/{slug} {"repo_url": "..."}`.
 
+## Dashboard login
+
+By default the dashboard is open (no login) — fine for local dev. Before exposing it on a
+shared or public server, set a shared access token:
+
+```
+FLAKELENS_ACCESS_TOKEN=some-long-random-string
+FLAKELENS_SECURE_COOKIES=true   # when served over HTTPS
+```
+
+Users enter the token once on a login screen; it's stored in an httpOnly cookie. Scripts/CI
+can pass it as `Authorization: Bearer <token>`. This gates the dashboard and agent APIs only —
+**the ingestion API is unaffected**, so your test runners keep authenticating with their own
+per-project keys (`X-Api-Key`). `/health` stays open for container probes.
+
 ## Roadmap
 
 - **Selenium Java:** JUnit XML ingestion adapter translating into the same result envelope.
-- Auto-quarantine suggestions, failure clustering by fingerprint, Slack digests.
+- User accounts / SSO (the shared token is the single-team starting point).
+- NL test authoring agent; plain-language "what should I do today" mode.

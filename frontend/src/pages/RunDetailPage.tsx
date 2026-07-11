@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 
 function useSlug() {
@@ -102,6 +103,28 @@ function ResultDetailPanel({ resultId, onClose }: { resultId: number; onClose: (
   );
 }
 
+function MergeVerdict({ runId }: { runId: number }) {
+  const { data } = useQuery({
+    queryKey: ["verdict", runId],
+    queryFn: async () => {
+      const r = await fetch(`/api/v1/runs/${runId}/verdict`);
+      if (!r.ok) throw new Error(`${r.status}`);
+      return r.json() as Promise<{ conclusion: string; title: string }>;
+    },
+  });
+  if (!data) return null;
+  const style =
+    data.conclusion === "success" ? "bg-emerald-500/15 text-emerald-400"
+      : data.conclusion === "neutral" ? "bg-amber-500/15 text-amber-400"
+      : "bg-red-500/15 text-red-400";
+  const icon = data.conclusion === "success" ? "✓ merge-ready" : data.conclusion === "neutral" ? "⚠ flaky only" : "✕ blocked";
+  return (
+    <span className={`rounded px-2 py-0.5 text-xs font-medium ${style}`} title={data.title}>
+      {icon}
+    </span>
+  );
+}
+
 const FILTERS = [
   { value: "", label: "All" },
   { value: "failed", label: "Failed" },
@@ -126,6 +149,7 @@ export function RunDetailPage() {
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <h1 className="grad-text text-3xl font-bold">Run #{run.id}</h1>
         <StatusBadge status={run.status} />
+        <MergeVerdict runId={run.id} />
         {run.branch && <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-zinc-400">{run.branch}</span>}
         <span className="text-sm text-zinc-500">{formatDate(run.started_at)}</span>
         {run.previous_run_id && (

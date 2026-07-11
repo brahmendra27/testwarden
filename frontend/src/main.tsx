@@ -17,6 +17,7 @@ import { ErrorPage } from "./pages/ErrorPage";
 import { QuarantinePage } from "./pages/QuarantinePage";
 import { CrewPage } from "./pages/CrewPage";
 import { AuthorPage } from "./pages/AuthorPage";
+import { IncidentsPage } from "./pages/IncidentsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 15_000 } },
@@ -38,6 +39,7 @@ const router = createBrowserRouter([
       { path: "/p/:slug/quarantine", element: <QuarantinePage /> },
       { path: "/p/:slug/crew", element: <CrewPage /> },
       { path: "/p/:slug/author", element: <AuthorPage /> },
+      { path: "/p/:slug/incidents", element: <IncidentsPage /> },
     ],
   },
 ]);

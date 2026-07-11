@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { useCompare, useRuns } from "../api/hooks";
+import { useBranches, useCompare, useRuns } from "../api/hooks";
 import type { CompareItem } from "../api/types";
 import { StatusBadge } from "../components/StatusBadge";
 import { formatDate } from "../components/status";
@@ -46,13 +47,41 @@ function RunSelect({
   );
 }
 
+function BranchSelect({ label, value, onChange, branches }: {
+  label: string; value: string; onChange: (b: string) => void; branches: string[];
+}) {
+  return (
+    <label className="flex items-center gap-2 text-sm text-zinc-400">
+      {label}
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="field">
+        <option value="" disabled>select branch</option>
+        {branches.map((b) => <option key={b} value={b}>{b}</option>)}
+      </select>
+    </label>
+  );
+}
+
 export function ComparePage() {
   const { slug = "" } = useParams();
   const [params, setParams] = useSearchParams();
+  const [mode, setMode] = useState<"runs" | "branches">("runs");
   const { data: runs } = useRuns(slug);
+  const { data: branches } = useBranches(slug);
+  const [baseBranch, setBaseBranch] = useState("");
+  const [headBranch, setHeadBranch] = useState("");
   const base = params.get("base") ? Number(params.get("base")) : null;
   const head = params.get("head") ? Number(params.get("head")) : null;
-  const { data: comparison, isLoading } = useCompare(base, head);
+  const { data: runComparison, isLoading: runLoading } = useCompare(base, head);
+  const { data: branchComparison, isLoading: branchLoading } = useQuery({
+    queryKey: ["compare-branches", slug, baseBranch, headBranch],
+    queryFn: async () => {
+      const r = await fetch(`/api/v1/projects/${slug}/compare-branches?base=${encodeURIComponent(baseBranch)}&head=${encodeURIComponent(headBranch)}`);
+      if (!r.ok) throw new Error((await r.json()).detail ?? `${r.status}`);
+      return r.json();
+    },
+    enabled: mode === "branches" && !!baseBranch && !!headBranch,
+    retry: false,
+  });
   const [activeBucket, setActiveBucket] = useState("newly_failing");
 
   const setParam = (key: "base" | "head") => (id: number) => {
@@ -60,18 +89,41 @@ export function ComparePage() {
     setParams(params, { replace: true });
   };
 
+  const comparison = mode === "runs" ? runComparison : branchComparison;
+  const isLoading = mode === "runs" ? runLoading : branchLoading;
+  const ready = mode === "runs" ? base != null && head != null : !!baseBranch && !!headBranch;
   const items: CompareItem[] = comparison?.buckets[activeBucket] ?? [];
 
   return (
     <div>
-      <h1 className="grad-text mb-4 text-3xl font-bold">Compare runs</h1>
-      <div className="mb-6 flex flex-wrap items-center gap-6">
-        <RunSelect label="Base" value={base} onChange={setParam("base")} runs={runs ?? []} />
-        <span className="text-zinc-600">→</span>
-        <RunSelect label="Head" value={head} onChange={setParam("head")} runs={runs ?? []} />
+      <h1 className="grad-text mb-4 text-3xl font-bold">Compare</h1>
+      <div className="mb-4 flex gap-2">
+        {(["runs", "branches"] as const).map((m) => (
+          <button key={m} onClick={() => setMode(m)}
+            className={`rounded-full px-3 py-1 text-sm capitalize transition ${
+              mode === m ? "border border-blue-400/40 bg-blue-500/15 text-blue-200"
+                : "border border-white/10 text-zinc-400 hover:bg-white/5"}`}>
+            {m}
+          </button>
+        ))}
       </div>
-      {base == null || head == null ? (
-        <p className="text-zinc-500">Pick two runs to compare.</p>
+      <div className="mb-6 flex flex-wrap items-center gap-6">
+        {mode === "runs" ? (
+          <>
+            <RunSelect label="Base" value={base} onChange={setParam("base")} runs={runs ?? []} />
+            <span className="text-zinc-600">→</span>
+            <RunSelect label="Head" value={head} onChange={setParam("head")} runs={runs ?? []} />
+          </>
+        ) : (
+          <>
+            <BranchSelect label="Base" value={baseBranch} onChange={setBaseBranch} branches={branches ?? []} />
+            <span className="text-zinc-600">→</span>
+            <BranchSelect label="Head" value={headBranch} onChange={setHeadBranch} branches={branches ?? []} />
+          </>
+        )}
+      </div>
+      {!ready ? (
+        <p className="text-zinc-500">Pick two {mode === "runs" ? "runs" : "branches"} to compare.</p>
       ) : isLoading ? (
         <p className="text-zinc-500">Comparing…</p>
       ) : comparison ? (

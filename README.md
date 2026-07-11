@@ -53,6 +53,47 @@ Open <http://localhost:8787> — a single container serves the API **and** the d
 backed by Postgres. Tables and additive columns are created on startup (no manual migration).
 Data and artifacts persist in named volumes.
 
+## Report from CI (any framework)
+
+Two ways to get results into FlakeLens:
+
+**1. The pytest reporter** (Playwright/pytest) — richest data (retries, artifacts, live streaming). See the starter kit.
+
+**2. JUnit XML** — works with **any** framework that emits JUnit (Selenium/Java, Jest, Cypress, Playwright-JS, Go, .NET, Ruby…). One upload after your tests run:
+
+```yaml
+# GitHub Actions
+- name: Run tests
+  run: <your test command that writes junit.xml>   # e.g. mvn test, npx jest --reporters=jest-junit
+- name: Report to FlakeLens
+  if: always()
+  run: |
+    curl -f -X POST "$FLAKELENS_URL/api/v1/ingest/junit" \
+      -H "X-Api-Key: $FLAKELENS_API_KEY" \
+      -F "file=@junit.xml" \
+      -F "framework=junit-selenium" \
+      -F "branch=${GITHUB_REF_NAME}" \
+      -F "commit_sha=${GITHUB_SHA}" \
+      -F "ci_url=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+  env:
+    FLAKELENS_URL: https://flakelens.your-company.com
+    FLAKELENS_API_KEY: ${{ secrets.FLAKELENS_API_KEY }}
+```
+
+```yaml
+# GitLab CI
+report_flakelens:
+  when: always
+  script:
+    - curl -f -X POST "$FLAKELENS_URL/api/v1/ingest/junit"
+        -H "X-Api-Key: $FLAKELENS_API_KEY"
+        -F "file=@junit.xml" -F "branch=$CI_COMMIT_REF_NAME" -F "commit_sha=$CI_COMMIT_SHA"
+```
+
+With a `GITHUB_TOKEN` on the server and the run's `commit_sha`, you can also post a
+flakiness-adjusted **merge verdict** back to the PR — known-flaky failures don't block, only
+genuinely new failures do (`POST /api/v1/runs/{id}/post-check`).
+
 ## Quickstart (Windows, no Docker)
 
 ```powershell

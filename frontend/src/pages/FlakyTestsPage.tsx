@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { useFlaky } from "../api/hooks";
 import { HistorySquares } from "../components/HistorySquares";
+import { InfoTip } from "../components/InfoTip";
 import { formatDuration } from "../components/status";
 
 export function FlakyTestsPage() {
@@ -12,6 +13,7 @@ export function FlakyTestsPage() {
       <h1 className="grad-text mb-2 text-3xl font-bold">Flaky tests</h1>
       <p className="mb-6 text-sm text-zinc-500">
         Tests that flip between pass and fail across runs, or that regularly need retries to pass.
+        Sorted by <InfoTip term="flake score" />.
       </p>
       {!flaky?.length && (
         <div className="card p-8 text-center text-zinc-500">

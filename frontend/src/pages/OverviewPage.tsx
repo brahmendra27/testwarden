@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import { StatusBadge } from "../components/StatusBadge";
+import { HealthPanel } from "../components/HealthPanel";
 import { formatDuration } from "../components/status";
 
 interface Overview {
@@ -97,6 +98,8 @@ export function OverviewPage() {
         <span className="glow-dot" />
       </div>
       <p className="mb-6 text-sm text-zinc-500">Suite health over the last {series.length} runs</p>
+
+      <HealthPanel />
 
       <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
         <Kpi

@@ -291,6 +291,23 @@ class FlakelensPlugin:
                     )
 
 
+@pytest.fixture(autouse=True)
+def _flakelens_perturb(request):
+    """Reproducer: if FLAKELENS_PERTURB holds a recipe and the test uses a
+    Playwright `page`, inject the controlled chaos before the test navigates.
+    No-op otherwise — normal runs never touch this path."""
+    from flakelens_reporter import perturb
+
+    recipe = perturb.load_recipe()
+    if recipe and "page" in request.fixturenames:
+        try:
+            page = request.getfixturevalue("page")
+            perturb.apply_to_page(page, recipe)
+        except Exception:
+            pass
+    yield
+
+
 @pytest.fixture
 def flakelens_attach(request):
     """Attach an arbitrary file to the current test attempt:

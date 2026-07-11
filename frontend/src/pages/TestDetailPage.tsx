@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useTestDetail } from "../api/hooks";
 import { HistorySquares } from "../components/HistorySquares";
+import { Reproducer } from "../components/Reproducer";
 import { StatusBadge } from "../components/StatusBadge";
 import { TrendChart } from "../components/TrendChart";
 import { formatDate, formatDuration } from "../components/status";
@@ -32,6 +33,8 @@ export function TestDetailPage() {
         {test.is_flaky && <StatusBadge status="flaky" />}
       </div>
       <p className="mb-6 text-sm text-zinc-500">{test.file_path}</p>
+
+      {test.is_flaky && <Reproducer caseId={test.id} />}
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <div className="card px-4 py-3">

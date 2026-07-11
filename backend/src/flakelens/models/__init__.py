@@ -6,10 +6,12 @@ from flakelens.models.artifact import Artifact
 from flakelens.models.analysis import FailureAnalysis
 from flakelens.models.agentjob import AgentJob
 from flakelens.models.apitest import ApiTestJob
+from flakelens.models.reprojob import ReproJob
 
 __all__ = [
     "AgentJob",
     "ApiTestJob",
+    "ReproJob",
     "Project",
     "ApiKey",
     "Run",

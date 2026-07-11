@@ -167,6 +167,18 @@ def run_agent(client, workspace: FixWorkspace, task: str, log, system: str = SYS
     return {"outcome": "gave_up", "summary": f"Stopped after {MAX_ITERATIONS} iterations."}
 
 
+def latest_reproducer_recipe(db, case_id: int):
+    """The stored minimal recipe that reproduces this test's flake, if any."""
+    from flakelens.models import ReproJob
+
+    job = db.scalar(
+        select(ReproJob)
+        .where(ReproJob.test_case_id == case_id, ReproJob.outcome == "reproduced")
+        .order_by(ReproJob.id.desc())
+    )
+    return (job.recipe, job.recipe_label) if job and job.recipe else (None, None)
+
+
 def _build_task(db, result: TestResult, case: TestCase, run: Run) -> str:
     attempts = db.scalars(
         select(TestAttempt).where(TestAttempt.result_id == result.id)
@@ -190,6 +202,13 @@ def _build_task(db, result: TestResult, case: TestCase, run: Run) -> str:
             parts.append(f"Stack trace:\n{last.stack_trace[:6000]}")
     if analysis is not None:
         parts.append(f"\nPrior AI analysis of this failure:\n{analysis.content[:3000]}")
+    _recipe, recipe_label = latest_reproducer_recipe(db, case.id)
+    if recipe_label:
+        parts.append(
+            f"\nFlakeLens Reproducer found this failure is DETERMINISTIC under: {recipe_label}.\n"
+            "This is a race/timing bug, not a random flake — fix the underlying handling "
+            "(add awaits/retries/guards for that condition), not the test's assertions."
+        )
     parts.append("\nFind the root cause, apply the minimal fix, verify with run_tests, then call finish.")
     return "\n".join(parts)
 
@@ -198,6 +217,33 @@ def _slug(text: str, limit: int = 40) -> str:
     import re
 
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:limit]
+
+
+def _verify_under_recipe(workspace, case, recipe: dict, log, runs: int = 5) -> bool:
+    """Run the (now-patched) test `runs` times under the reproducer recipe.
+    The fix holds only if it passes every time under the failure condition."""
+    import json
+
+    selector = case.node_id.split("[", 1)[0]
+    candidates = workspace.list_files(Path(case.file_path).name)
+    cwd = "."
+    if candidates:
+        rel = candidates[0]
+        depth = case.file_path.replace("\\", "/").count("/") + 1
+        parts = rel.split("/")
+        cwd = "/".join(parts[:-min(depth, len(parts))]) or "."
+        selector = "/".join(parts[-min(depth, len(parts)):]).split("[", 1)[0]
+    log(f"Verifying fix under reproducer condition ({runs} runs) ...")
+    for i in range(runs):
+        output = workspace.run_tests(
+            f"{selector} -p no:flakelens", cwd=cwd,
+            extra_env={"FLAKELENS_ENABLED": "false", "FLAKELENS_PERTURB": json.dumps(recipe)},
+        )
+        passed = bool(output) and "exit code: 0" in output.splitlines()[0]
+        log(f"  run {i + 1}/{runs}: {'pass' if passed else 'FAIL'}")
+        if not passed:
+            return False
+    return True
 
 
 def execute_autofix_job(job_id: int) -> None:
@@ -257,6 +303,23 @@ def execute_autofix_job(job_id: int) -> None:
                     else f"Agent outcome: {verdict['outcome']}"
                 )
             else:
+                # If the Reproducer found a deterministic trigger, prove the fix
+                # holds UNDER that exact condition — not just a lucky green run.
+                recipe, recipe_label = latest_reproducer_recipe(db, case.id)
+                if recipe:
+                    verified = _verify_under_recipe(workspace, case, recipe, log)
+                    verdict_note = (
+                        f"\n\nVerified under reproducer ({recipe_label}): "
+                        f"{'PASSED 5/5' if verified else 'STILL FAILS — fix incomplete'}."
+                    )
+                    verdict["summary"] += verdict_note
+                    if not verified:
+                        job.summary = verdict["summary"]
+                        job.status = "failed"
+                        job.error = f"Fix did not hold under reproducer condition: {recipe_label}"
+                        job.finished_at = datetime.now(timezone.utc)
+                        db.commit()
+                        return
                 workspace.commit(f"fix: {case.title} (FlakeLens SelfHeal #{job.id})")
                 log("Changes committed.")
                 token = os.environ.get("FLAKELENS_GITHUB_TOKEN") or os.environ.get("GITHUB_TOKEN")

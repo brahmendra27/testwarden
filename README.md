@@ -12,6 +12,12 @@ full context (stack traces, screenshots, Playwright traces), detects **flaky tes
 - **Flaky detection** — cross-run flip-flop rate *and* intra-run retry recoveries (pytest-rerunfailures aware)
 - **Run comparison** — newly failing / fixed / newly flaky / still failing between any two runs
 - **`pytest-flakelens` reporter** — streams results + artifacts during the run; never fails your session
+- **Reproducer** — deterministic flake reproduction. Runs a flaky test under controlled chaos
+  (per-route network latency/failure, CPU throttling, timing jitter, seeded RNG/clock, mobile
+  viewport) and searches — stress-all → category bisect → minimize — for the *minimal* condition
+  that makes it fail every time. Turns "sometimes red" into "fails 10/10 when `/api/cart` is
+  slower than 200ms". SelfHeal then verifies its fix under that exact condition, not a lucky
+  green run. No other tool can do this — they observe CI, they don't control the test runtime.
 - **Quarantine-and-heal loop** — quarantine a flaky test via an agent-authored PR
   (`@pytest.mark.quarantine` runs it as non-strict xfail, so CI goes green while it keeps
   reporting real outcomes), let SelfHeal fix it in the background, then release it with

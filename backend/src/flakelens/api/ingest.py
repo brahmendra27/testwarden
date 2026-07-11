@@ -2,12 +2,16 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+import xml.etree.ElementTree as ET
+from uuid import uuid4
+
 from flakelens.auth import require_project
 from flakelens.config import settings
 from flakelens.db import get_db
 from flakelens.models import Artifact, Project, Run, TestAttempt, TestResult
 from flakelens.schemas.ingest import ResultBatch, RunCreate, RunFinish
 from flakelens.services import ingestion
+from flakelens.services.junit import parse_junit
 from flakelens.services.stats import finalize_run
 from flakelens.services.storage import build_storage_key, storage
 
@@ -107,5 +111,44 @@ def finish_run(
         "total": run.total,
         "passed": run.passed,
         "failed": run.failed,
+        "flaky": run.flaky_count,
+    }
+
+
+@router.post("/junit")
+def ingest_junit(
+    file: UploadFile = File(...),
+    framework: str = Form("junit"),
+    branch: str = Form(None),
+    commit_sha: str = Form(None),
+    ci_url: str = Form(None),
+    environment: str = Form(None),
+    project: Project = Depends(require_project),
+    db: Session = Depends(get_db),
+):
+    """One-shot ingest of a JUnit XML report from ANY framework: creates the run,
+    stores every testcase, and finalizes — no plugin required."""
+    raw = file.file.read()
+    try:
+        text = raw.decode("utf-8", errors="replace")
+        envelopes = parse_junit(text, framework=framework)
+    except ET.ParseError as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid JUnit XML: {exc}")
+    if not envelopes:
+        raise HTTPException(status_code=400, detail="No <testcase> elements found in the report")
+
+    payload = RunCreate(
+        run_uuid=str(uuid4()), framework=framework, branch=branch,
+        commit_sha=commit_sha, ci_url=ci_url, environment=environment,
+    )
+    run, _ = ingestion.get_or_create_run(db, project.id, payload)
+    from flakelens.schemas.ingest import ResultEnvelope
+
+    ingestion.ingest_results(db, project.id, run, [ResultEnvelope(**e) for e in envelopes])
+    finalize_run(db, run)
+    db.commit()
+    return {
+        "run_id": run.id, "status": run.status, "total": run.total,
+        "passed": run.passed, "failed": run.failed, "skipped": run.skipped,
         "flaky": run.flaky_count,
     }

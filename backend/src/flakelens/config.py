@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # When set, the backend also serves the built frontend from this dir (single
     # image / single process deploy). Empty in dev, where Vite serves the SPA.
     static_dir: str = ""
+    # Nightly maintenance crew: hour of day (0-23, server local time) to run a
+    # pass over every project. -1 disables the schedule (manual runs still work).
+    crew_hour: int = -1
 
 
 settings = Settings()

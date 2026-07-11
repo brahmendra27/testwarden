@@ -42,6 +42,7 @@ export function Layout() {
               <SideLink to={`/p/${slug}/quarantine`} label="Quarantine" />
               <SideLink to={`/p/${slug}/compare`} label="Compare runs" />
               <SideLink to={`/p/${slug}/api-agent`} label="API test agent" />
+              <SideLink to={`/p/${slug}/crew`} label="Maintenance crew" />
             </>
           )}
         </nav>

@@ -12,23 +12,60 @@ from flakelens.api import (
     autofix,
     compare,
     ingest,
+    crew,
     projects,
     quarantine,
     reproducer,
     runs,
     tests,
 )
+from flakelens.services.crew import execute_crew_run
 from flakelens.services.stats import sweep_interrupted_runs
+
+
+async def _nightly_crew_scheduler():
+    """Fire a crew pass for every project once a day at settings.crew_hour.
+    Simple wall-clock loop — good enough for a single-instance self-host."""
+    import asyncio
+    from datetime import datetime
+
+    from sqlalchemy import select
+
+    from flakelens.models import CrewRun, Project
+
+    fired_on = None
+    while True:
+        await asyncio.sleep(60)
+        now = datetime.now()
+        if now.hour != settings.crew_hour or now.date() == fired_on:
+            continue
+        fired_on = now.date()
+        with SessionLocal() as db:
+            project_ids = list(db.scalars(select(Project.id)).all())
+        for pid in project_ids:
+            with SessionLocal() as db:
+                run = CrewRun(project_id=pid, trigger="scheduled")
+                db.add(run)
+                db.commit()
+                run_id = run.id
+            await asyncio.to_thread(execute_crew_run, run_id)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import asyncio
+
     # Idempotent for dev/SQLite; Postgres deployments should also run alembic.
     Base.metadata.create_all(engine)
     apply_additive_migrations(engine)
     with SessionLocal() as db:
         sweep_interrupted_runs(db, settings.interrupted_run_ttl_minutes)
+    scheduler = None
+    if 0 <= settings.crew_hour <= 23:
+        scheduler = asyncio.create_task(_nightly_crew_scheduler())
     yield
+    if scheduler is not None:
+        scheduler.cancel()
 
 
 def create_app() -> FastAPI:
@@ -50,6 +87,7 @@ def create_app() -> FastAPI:
     app.include_router(apitest.router)
     app.include_router(quarantine.router)
     app.include_router(reproducer.router)
+    app.include_router(crew.router)
 
     @app.get("/api/v1/health")
     def health():

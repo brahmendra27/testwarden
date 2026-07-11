@@ -7,10 +7,12 @@ from flakelens.models.analysis import FailureAnalysis
 from flakelens.models.agentjob import AgentJob
 from flakelens.models.apitest import ApiTestJob
 from flakelens.models.reprojob import ReproJob
+from flakelens.models.crewrun import CrewRun
 
 __all__ = [
     "AgentJob",
     "ApiTestJob",
+    "CrewRun",
     "ReproJob",
     "Project",
     "ApiKey",

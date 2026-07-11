@@ -210,7 +210,12 @@ def _build_task(db, result: TestResult, case: TestCase, run: Run) -> str:
             "(add awaits/retries/guards for that condition), not the test's assertions."
         )
     parts.append("\nFind the root cause, apply the minimal fix, verify with run_tests, then call finish.")
-    return "\n".join(parts)
+    from flakelens.services.redact import scrub
+
+    # Scrub secrets from error/stack/stdout evidence before it reaches the LLM.
+    # (File contents the agent reads via tools are intentionally NOT scrubbed —
+    # it needs the real source to fix the bug.)
+    return scrub("\n".join(parts))
 
 
 def _slug(text: str, limit: int = 40) -> str:

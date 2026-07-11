@@ -102,6 +102,9 @@ cd packages\pytest-flakelens; ..\..\.venv\Scripts\python -m pytest   # 7 plugin 
 ## AI features
 
 Both need `ANTHROPIC_API_KEY` set on the backend server (model: `claude-opus-4-8`).
+All evidence sent to the LLM (failure context, SelfHeal task, OpenAPI specs) is first run
+through a secret-scrubber (`services/redact.py`) that redacts bearer tokens, API keys, JWTs,
+URL-embedded passwords, cookies, and sensitive key/value pairs.
 
 - **AI failure analysis** — the ✨ button on any failure sends the stack trace, retry history
   and flake stats to Claude, which returns a root cause, a classification

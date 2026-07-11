@@ -50,7 +50,10 @@ def _fetch_spec(spec_url: str) -> str:
         text = response.text
     if len(text) > SPEC_CHAR_LIMIT:
         text = text[:SPEC_CHAR_LIMIT] + "\n... [spec truncated]"
-    return text
+    from flakelens.services.redact import scrub
+
+    # Specs sometimes carry example bearer tokens / api keys in descriptions.
+    return scrub(text)
 
 
 def _collect_code(workspace: FixWorkspace) -> str:

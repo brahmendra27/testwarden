@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from flakelens.models import FailureAnalysis, Run, TestAttempt, TestCase, TestResult
+from flakelens.services.redact import scrub
 
 MODEL = "claude-opus-4-8"
 
@@ -64,7 +65,9 @@ def _build_context(db: Session, result: TestResult) -> str:
             parts.append(f"Stack trace:\n{attempt.stack_trace[:6000]}")
         if attempt.stdout:
             parts.append(f"Stdout (tail):\n{attempt.stdout[-2000:]}")
-    return "\n".join(parts)
+    # Sanitize before anything leaves for the LLM: tokens/passwords/cookies can
+    # leak into stack traces and logged output.
+    return scrub("\n".join(parts))
 
 
 def analyze_result(db: Session, result: TestResult, force: bool = False) -> FailureAnalysis:

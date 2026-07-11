@@ -12,8 +12,11 @@ pip install pytest-flakelens          # the reporter (see packages/pytest-flakel
 docker compose up                     # or self-host the dashboard + API
 ```
 
+![FlakeLens walkthrough](docs/media/flakelens-demo.gif)
+
 One-click demo deploy → [`docs/HOSTED_DEMO.md`](docs/HOSTED_DEMO.md). Launch assets →
-[`docs/VIDEO_STORYBOARD.md`](docs/VIDEO_STORYBOARD.md).
+[`docs/VIDEO_STORYBOARD.md`](docs/VIDEO_STORYBOARD.md). Re-record the GIF anytime with
+`python scripts/record_demo.py` (dev servers up).
 
 ## Features (v0.1 MVP)
 

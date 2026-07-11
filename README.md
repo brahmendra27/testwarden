@@ -30,7 +30,11 @@ backend/                    FastAPI + SQLAlchemy (SQLite by default, Postgres vi
 frontend/                   React + TypeScript + Vite + Tailwind dashboard
 packages/pytest-flakelens/ pytest plugin that reports into the ingestion API
 examples/sample-playwright-project/  offline demo suite (1 flaky + 1 broken test on purpose)
+examples/starter-kit/       clean Page-Object-Model template — copy, point at your app, go
 ```
+
+New to it? **`examples/starter-kit/`** is a copy-and-adapt POM Playwright suite already wired
+for FlakeLens — the fastest way to instrument your own app.
 
 The result schema is framework-agnostic (envelope + `extras` JSON), so Selenium/JUnit XML
 and API-test runners can be added as adapters without schema changes.

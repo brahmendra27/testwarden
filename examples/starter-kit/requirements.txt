@@ -1,0 +1,7 @@
+pytest>=8.0
+pytest-playwright>=0.5
+pytest-rerunfailures>=12.0
+# The FlakeLens reporter. From this repo:
+#   pip install -e ../../packages/pytest-flakelens
+# Or once published:
+#   pip install pytest-flakelens

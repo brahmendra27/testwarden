@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Acme Store — Starter</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 640px; }
+    .hidden { display: none; }
+    .error { color: #c00; }
+    button { padding: .4rem .9rem; }
+    li { padding: 3px 0; }
+  </style>
+</head>
+<body>
+  <h1 id="page-title">Acme Store</h1>
+
+  <section id="login-view">
+    <h2>Sign in</h2>
+    <input id="username" placeholder="Username" />
+    <input id="password" type="password" placeholder="Password" />
+    <button id="login-button">Sign in</button>
+    <p id="login-error" class="hidden error">Invalid credentials</p>
+  </section>
+
+  <section id="catalog-view" class="hidden">
+    <p>Welcome, <strong id="current-user"></strong> · <button id="logout-button">Log out</button></p>
+    <input id="search" placeholder="Filter products…" />
+    <ul id="product-list">
+      <li data-testid="product">Widget</li>
+      <li data-testid="product">Gadget</li>
+      <li data-testid="product">Gizmo</li>
+      <li data-testid="product">Sprocket</li>
+    </ul>
+    <p>Cart: <strong id="cart-count">0</strong> <button id="add-first">Add first product</button></p>
+  </section>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    $("login-button").addEventListener("click", () => {
+      const ok = $("username").value === "standard_user" && $("password").value === "secret";
+      $("login-error").classList.toggle("hidden", ok);
+      if (ok) {
+        $("current-user").textContent = $("username").value;
+        $("login-view").classList.add("hidden");
+        $("catalog-view").classList.remove("hidden");
+      }
+    });
+    $("logout-button").addEventListener("click", () => {
+      $("catalog-view").classList.add("hidden");
+      $("login-view").classList.remove("hidden");
+      $("username").value = $("password").value = "";
+    });
+    $("search").addEventListener("input", (e) => {
+      const term = e.target.value.toLowerCase();
+      document.querySelectorAll("#product-list li").forEach((li) => {
+        li.style.display = li.textContent.toLowerCase().includes(term) ? "" : "none";
+      });
+    });
+    let cart = 0;
+    $("add-first").addEventListener("click", () => { $("cart-count").textContent = String(++cart); });
+  </script>
+</body>
+</html>

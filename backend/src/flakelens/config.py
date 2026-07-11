@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173"]
     # URL agents use to report generated-suite results back into this server.
     public_url: str = "http://localhost:8787"
+    # When set, the backend also serves the built frontend from this dir (single
+    # image / single process deploy). Empty in dev, where Vite serves the SPA.
+    static_dir: str = ""
 
 
 settings = Settings()

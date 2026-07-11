@@ -55,7 +55,34 @@ def create_app() -> FastAPI:
     def health():
         return {"status": "ok"}
 
+    _mount_frontend(app)
     return app
+
+
+def _mount_frontend(app: FastAPI) -> None:
+    """Serve the built SPA from static_dir (single-image deploy). Unknown non-API
+    paths fall back to index.html so client-side routing works on refresh."""
+    from pathlib import Path
+
+    from fastapi.responses import FileResponse
+    from fastapi.staticfiles import StaticFiles
+
+    if not settings.static_dir:
+        return
+    static_root = Path(settings.static_dir)
+    index = static_root / "index.html"
+    if not index.is_file():
+        return
+    assets = static_root / "assets"
+    if assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(assets)), name="assets")
+
+    @app.get("/{full_path:path}")
+    def spa(full_path: str):
+        candidate = (static_root / full_path).resolve()
+        if candidate.is_file() and static_root.resolve() in candidate.parents:
+            return FileResponse(candidate)
+        return FileResponse(index)
 
 
 app = create_app()

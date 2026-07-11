@@ -35,6 +35,20 @@ examples/sample-playwright-project/  offline demo suite (1 flaky + 1 broken test
 The result schema is framework-agnostic (envelope + `extras` JSON), so Selenium/JUnit XML
 and API-test runners can be added as adapters without schema changes.
 
+## Self-host with Docker (one command)
+
+```bash
+# optional: create a .env next to docker-compose.yml with your keys
+#   ANTHROPIC_API_KEY=sk-ant-...      # enables the AI agents
+#   GITHUB_TOKEN=ghp_...              # lets SelfHeal open PRs
+#   POSTGRES_PASSWORD=change-me       # defaults to "flakelens"
+docker compose up --build
+```
+
+Open <http://localhost:8787> — a single container serves the API **and** the dashboard,
+backed by Postgres. Tables and additive columns are created on startup (no manual migration).
+Data and artifacts persist in named volumes.
+
 ## Quickstart (Windows, no Docker)
 
 ```powershell

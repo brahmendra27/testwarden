@@ -1,13 +1,16 @@
+# FlakeLens self-host: `docker compose up` starts Postgres + the app (API + SPA)
+# on http://localhost:8787. Set ANTHROPIC_API_KEY (and optionally GITHUB_TOKEN)
+# in a .env file next to this one to enable the AI agents.
 services:
   db:
     image: postgres:16
     container_name: flakelens-db
     environment:
       POSTGRES_USER: flakelens
-      POSTGRES_PASSWORD: flakelens
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flakelens}
       POSTGRES_DB: flakelens
     ports:
-      - "5433:5432"
+      - "5433:5432"   # host access for `docker compose up -d db` dev use
     volumes:
       - flakelens-pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -16,5 +19,22 @@ services:
       timeout: 3s
       retries: 10
 
+  app:
+    build: .
+    container_name: flakelens-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      FLAKELENS_DATABASE_URL: postgresql+psycopg://flakelens:${POSTGRES_PASSWORD:-flakelens}@db:5432/flakelens
+      FLAKELENS_PUBLIC_URL: http://localhost:8787
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    ports:
+      - "8787:8787"
+    volumes:
+      - flakelens-data:/data
+
 volumes:
   flakelens-pgdata:
+  flakelens-data:

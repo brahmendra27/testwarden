@@ -7,6 +7,8 @@ flaky ones with a pull request. It ingests results from **Playwright + pytest** 
 from any framework), tracks run history, records failures with full context, detects **flaky
 tests**, and closes the loop: reproduce → self-heal → quarantine → verify.
 
+**▶ Live demo: <https://flakelens-demo.onrender.com/>** &nbsp;·&nbsp; `pip install pytest-flakelens`
+
 ```bash
 pip install pytest-flakelens          # the reporter (see packages/pytest-flakelens)
 docker compose up                     # or self-host the dashboard + API
@@ -14,7 +16,11 @@ docker compose up                     # or self-host the dashboard + API
 
 ![FlakeLens walkthrough](docs/media/flakelens-demo.gif)
 
-One-click demo deploy → [`docs/HOSTED_DEMO.md`](docs/HOSTED_DEMO.md). Launch assets →
+Deploy your own demo in one click:
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/brahmendra27/testwarden)
+
+Details → [`docs/HOSTED_DEMO.md`](docs/HOSTED_DEMO.md). Launch assets →
 [`docs/VIDEO_STORYBOARD.md`](docs/VIDEO_STORYBOARD.md). Re-record the GIF anytime with
 `python scripts/record_demo.py` (dev servers up).
 

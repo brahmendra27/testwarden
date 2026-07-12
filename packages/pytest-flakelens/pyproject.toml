@@ -33,6 +33,7 @@ dev = ["pytest-rerunfailures>=12.0"]
 
 [project.urls]
 Homepage = "https://github.com/brahmendra27/testwarden"
+"Live demo" = "https://flakelens-demo.onrender.com/"
 Repository = "https://github.com/brahmendra27/testwarden"
 Issues = "https://github.com/brahmendra27/testwarden/issues"
 

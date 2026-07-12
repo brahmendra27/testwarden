@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useProjects } from "../api/hooks";
 import { NewProject } from "../components/NewProject";
 import { Sparkline } from "../components/Sparkline";
@@ -53,6 +54,53 @@ function PipInstall() {
   );
 }
 
+type Health = {
+  grade: string;
+  score: number;
+  pass_rate: number | null;
+  flaky: number;
+  incidents?: number;
+};
+
+function StatChips({ slug }: { slug: string }) {
+  const { data } = useQuery({
+    queryKey: ["health", slug],
+    queryFn: async (): Promise<Health> => {
+      const r = await fetch(`/api/v1/projects/${slug}/health`);
+      if (!r.ok) throw new Error("health unavailable");
+      const body = await r.json();
+      return body.health; // endpoint returns { health, actions }
+    },
+    staleTime: 60_000,
+    retry: false,
+  });
+  if (!data || data.grade === "—") return null;
+  const chips = [
+    { label: "health grade", value: data.grade },
+    ...(data.pass_rate != null
+      ? [{ label: "pass rate", value: `${Math.round(data.pass_rate * 100)}%` }]
+      : []),
+    { label: "flaky caught", value: String(data.flaky) },
+    ...(data.incidents != null
+      ? [{ label: "incidents clustered", value: String(data.incidents) }]
+      : []),
+  ];
+  return (
+    <div className="mt-6 flex flex-wrap items-center gap-2">
+      {chips.map((c) => (
+        <span
+          key={c.label}
+          className="inline-flex items-baseline gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-400"
+        >
+          <span className="font-semibold text-zinc-100">{c.value}</span>
+          {c.label}
+        </span>
+      ))}
+      <span className="text-xs text-zinc-600">· live from the demo project</span>
+    </div>
+  );
+}
+
 function Hero({ demoSlug }: { demoSlug?: string }) {
   return (
     <section className="card relative overflow-hidden p-8 sm:p-10">
@@ -61,40 +109,53 @@ function Hero({ demoSlug }: { demoSlug?: string }) {
         className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full opacity-40 blur-3xl"
         style={{ background: "radial-gradient(circle, rgba(77,118,255,0.5), transparent 60%)" }}
       />
-      <div className="relative max-w-2xl">
-        <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300">
-          <span className="glow-dot" /> Self-hosted · open source · AI-native
-        </span>
-        <h1
-          className="mt-5 text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl"
-          style={{ fontFamily: "Plus Jakarta Sans" }}
-        >
-          <span className="text-zinc-100">Every tool tells you a test is flaky.</span>
-          <br />
-          <span className="grad-text">FlakeLens fixes it.</span>
-        </h1>
-        <p className="mt-5 max-w-xl text-base leading-relaxed text-zinc-400">
-          Test observability with AI agents that <span className="text-zinc-200">write new tests from
-          plain English</span> and <span className="text-zinc-200">fix flaky ones with a pull request</span>.
-          Ingests Playwright, pytest, or JUnit from any framework — then closes the loop:
-          reproduce → self-heal → quarantine → verify.
-        </p>
-        <div className="mt-7 flex flex-wrap items-center gap-3">
-          {demoSlug && (
-            <Link to={`/p/${demoSlug}/overview`} className="btn-grad inline-flex items-center gap-2">
-              Explore the demo project
-              <span aria-hidden>→</span>
-            </Link>
-          )}
-          <PipInstall />
-          <a
-            href="https://github.com/brahmendra27/testwarden"
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm text-zinc-400 underline-offset-4 hover:text-zinc-200 hover:underline"
+      <div className="relative grid items-center gap-10 xl:grid-cols-[1.1fr_1fr]">
+        <div className="max-w-2xl">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300">
+            <span className="glow-dot" /> Self-hosted · open source · AI-native
+          </span>
+          <h1
+            className="mt-5 text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl"
+            style={{ fontFamily: "Plus Jakarta Sans" }}
           >
-            View on GitHub
-          </a>
+            <span className="text-zinc-100">Every tool tells you a test is flaky.</span>
+            <br />
+            <span className="grad-text">FlakeLens fixes it.</span>
+          </h1>
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-zinc-400">
+            Test observability with AI agents that <span className="text-zinc-200">write new tests from
+            plain English</span> and <span className="text-zinc-200">fix flaky ones with a pull request</span>.
+            Ingests Playwright, pytest, or JUnit from any framework — then closes the loop:
+            reproduce → self-heal → quarantine → verify.
+          </p>
+          <div className="mt-7 flex flex-wrap items-center gap-3">
+            {demoSlug && (
+              <Link to={`/p/${demoSlug}/overview`} className="btn-grad inline-flex items-center gap-2">
+                Explore the demo project
+                <span aria-hidden>→</span>
+              </Link>
+            )}
+            <PipInstall />
+            <a
+              href="https://github.com/brahmendra27/testwarden"
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm text-zinc-400 underline-offset-4 hover:text-zinc-200 hover:underline"
+            >
+              View on GitHub
+            </a>
+          </div>
+          {demoSlug && <StatChips slug={demoSlug} />}
+        </div>
+        <div className="hidden xl:block">
+          <div className="overflow-hidden rounded-xl border border-white/10 shadow-[0_0_40px_rgba(61,106,254,0.15)]">
+            <img
+              src="/flakelens-demo.gif"
+              alt="FlakeLens dashboard walkthrough"
+              className="block w-full"
+              loading="lazy"
+            />
+          </div>
         </div>
       </div>
     </section>

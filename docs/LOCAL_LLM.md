@@ -14,7 +14,7 @@ FLAKELENS_LLM_MODEL=qwen3-coder:30b             # its model name
 That's the whole configuration. With a base URL set, `ANTHROPIC_API_KEY` is not
 required; the agent buttons light up in the dashboard.
 
-## Option A — Ollama (simplest)
+## Option A — Ollama (simplest; verified against Ollama 0.31)
 
 Ollama exposes Anthropic-compatible Messages endpoints natively:
 
@@ -27,6 +27,11 @@ FLAKELENS_LLM_MODEL=qwen3-coder:30b
 
 In docker-compose, use `http://host.docker.internal:11434` so the container can
 reach Ollama on the host.
+
+**Pick a model whose Ollama template supports tool calling** (llama3.1+, qwen3,
+mistral families). We verified structured tool use works end-to-end through
+this path with `llama3.1:8b`; some templates (e.g. `qwen2.5-coder:7b`) emit the
+tool call as plain text instead, which the agents cannot execute.
 
 ## Option B — LiteLLM proxy (fronts anything)
 
@@ -52,10 +57,16 @@ the capability that separates models here.
   models — they're single-shot prompts.
 - **SelfHeal / author / API agents** need a strong tool-calling coder model.
   Realistic minimum: ~30B-class coder models (qwen3-coder, deepseek-coder-v2).
-  Small 7B models will wander, mis-call tools, and burn iterations.
-- Every agent has a hard iteration cap and verifies its work by actually
-  running the tests, so a weaker model fails *safe* — a job ends as "failed"
-  or "gave up", never as an unverified change. PRs remain human-reviewed.
+  We tested `llama3.1:8b` live: it wandered, mis-called tools, and gave up on a
+  trivial fix — 7–8B is below the floor for the agent loops.
+- The loop is hardened for weak models: a `finish("fixed")` is **rejected**
+  unless the agent actually changed a file and re-ran the tests afterwards,
+  prose-instead-of-tool-call replies get two protocol reminders, and malformed
+  tool calls come back as correctable errors instead of crashing the job.
+- Every agent additionally has a hard iteration cap and end-of-job checks (no
+  diff ⇒ failed; repro-recipe re-verification), so a weaker model fails *safe*
+  — a job ends as "failed" or "gave up", never as an unverified change. PRs
+  remain human-reviewed.
 
 ## What stays true regardless of provider
 

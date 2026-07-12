@@ -112,17 +112,20 @@ TOOLS = [
 
 
 def _dispatch(workspace: FixWorkspace, name: str, tool_input: dict) -> str:
-    if name == "list_files":
-        files = workspace.list_files(tool_input["pattern"])
-        return "\n".join(files) or "no matches"
-    if name == "read_file":
-        return workspace.read_file(tool_input["path"])
-    if name == "edit_file":
-        return workspace.edit_file(tool_input["path"], tool_input["old_str"], tool_input["new_str"])
-    if name == "write_file":
-        return workspace.write_file(tool_input["path"], tool_input["content"])
-    if name == "run_tests":
-        return workspace.run_tests(tool_input["args"], tool_input.get("cwd", "."))
+    try:
+        if name == "list_files":
+            files = workspace.list_files(tool_input.get("pattern") or "*")
+            return "\n".join(files) or "no matches"
+        if name == "read_file":
+            return workspace.read_file(tool_input["path"])
+        if name == "edit_file":
+            return workspace.edit_file(tool_input["path"], tool_input["old_str"], tool_input["new_str"])
+        if name == "write_file":
+            return workspace.write_file(tool_input["path"], tool_input["content"])
+        if name == "run_tests":
+            return workspace.run_tests(tool_input["args"], tool_input.get("cwd", "."))
+    except KeyError as exc:  # malformed call (weak models) → correctable feedback
+        raise WorkspaceError(f"missing required argument {exc} for {name}") from exc
     raise WorkspaceError(f"Unknown tool {name}")
 
 
@@ -132,8 +135,17 @@ def _preview(tool_input: dict) -> str:
 
 
 def run_agent(client, workspace: FixWorkspace, task: str, log, system: str = SYSTEM_PROMPT) -> dict:
-    """Manual tool loop. Returns {'outcome': 'fixed'|'cannot_fix'|'gave_up', 'summary': str}."""
+    """Manual tool loop. Returns {'outcome': 'fixed'|'cannot_fix'|'gave_up', 'summary': str}.
+
+    A finish(fixed) is only accepted after the agent has actually changed a file
+    AND run the tests afterwards — weaker (especially local) models sometimes
+    hallucinate completion on turn one; rejecting the premature finish pushes
+    them to do the work instead of ending the job.
+    """
     messages = [{"role": "user", "content": task}]
+    changed = False        # any edit/write since start
+    verified = False       # run_tests called after the last change
+    nudges = 0             # text-only replies answered with a protocol reminder
     for iteration in range(1, MAX_ITERATIONS + 1):
         response = client.messages.create(
             **model_kwargs(max_tokens=6000),
@@ -144,21 +156,47 @@ def run_agent(client, workspace: FixWorkspace, task: str, log, system: str = SYS
         tool_uses = [block for block in response.content if block.type == "tool_use"]
         if not tool_uses:
             text = "\n".join(b.text for b in response.content if b.type == "text")
+            # Weaker models sometimes narrate ("I will now run the tests")
+            # instead of calling the tool — remind them of the protocol twice
+            # before giving up.
+            if nudges < 2:
+                nudges += 1
+                log(f"[{iteration}] (text-only reply — nudging to use tools, {nudges}/2)")
+                messages.append({"role": "assistant",
+                                 "content": response.content
+                                 or [{"type": "text", "text": "(empty reply)"}]})
+                messages.append({"role": "user", "content":
+                                 "Do not reply with prose. Respond with a tool call: continue the "
+                                 "work (edit_file/write_file/run_tests) or call finish."})
+                continue
             return {"outcome": "gave_up", "summary": text or "Agent stopped without calling finish."}
 
         messages.append({"role": "assistant", "content": response.content})
         results = []
         for tool in tool_uses:
             if tool.name == "finish":
-                log(f"[{iteration}] finish({tool.input.get('outcome')})")
-                return {
-                    "outcome": tool.input.get("outcome", "fixed"),
-                    "summary": tool.input.get("summary", ""),
-                }
+                outcome = tool.input.get("outcome", "fixed")
+                if outcome == "fixed" and not (changed and verified):
+                    reason = ("you have not modified any file yet" if not changed
+                              else "you have not run the tests since your last change")
+                    log(f"[{iteration}] finish(fixed) REJECTED: {reason}")
+                    results.append({
+                        "type": "tool_result", "tool_use_id": tool.id,
+                        "content": f"Rejected: {reason}. Actually make the fix, verify it "
+                                   "with run_tests, and only then call finish.",
+                        "is_error": True,
+                    })
+                    continue
+                log(f"[{iteration}] finish({outcome})")
+                return {"outcome": outcome, "summary": tool.input.get("summary", "")}
             log(f"[{iteration}] {tool.name}({_preview(tool.input)})")
             try:
                 output = _dispatch(workspace, tool.name, tool.input)
                 results.append({"type": "tool_result", "tool_use_id": tool.id, "content": output})
+                if tool.name in ("edit_file", "write_file"):
+                    changed, verified = True, False
+                elif tool.name == "run_tests":
+                    verified = True
             except WorkspaceError as exc:
                 results.append({
                     "type": "tool_result", "tool_use_id": tool.id,

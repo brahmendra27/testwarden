@@ -57,6 +57,8 @@ class FakeClient:
                 self._block("write_file", {"path": "conftest.py", "content": CONFTEST}),
                 self._block("write_file", {"path": "tests/test_health.py", "content": GENERATED_TEST}),
             ],
+            # the loop's finish-gate requires a run_tests after the last write
+            [self._block("run_tests", {"args": "--collect-only -q"})],
             [self._block("finish", {"outcome": "fixed", "summary": "1 endpoint covered."})],
         ]
         content = script[self.step]

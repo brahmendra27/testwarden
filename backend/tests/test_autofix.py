@@ -103,6 +103,85 @@ def test_agent_loop_with_fake_client(workspace):
     assert "+    return a + b" in workspace.diff()
 
 
+class LazyThenHonestClient(FakeClient):
+    """Scripted weak model: hallucinates finish(fixed) on turn one (must be
+    rejected), then actually does the work when pushed."""
+
+    def _create(self, **kwargs):
+        script = [
+            [self._block("finish", {"outcome": "fixed", "summary": "All fixed (it lied)."})],
+            [self._block("edit_file", {
+                "path": "calc.py", "old_str": "return a - b  # bug", "new_str": "return a + b",
+            })],
+            # tries to finish again WITHOUT verifying — rejected again
+            [self._block("finish", {"outcome": "fixed", "summary": "Fixed (unverified)."})],
+            [self._block("run_tests", {"args": "test_calc.py"})],
+            [self._block("finish", {"outcome": "fixed", "summary": "Fixed and verified."})],
+        ]
+        content = script[self.step]
+        self.step += 1
+        return SimpleNamespace(content=content, stop_reason="tool_use")
+
+
+def test_premature_finish_is_rejected_until_change_and_verify(workspace):
+    workspace.create_branch("flakelens/fix-add-3")
+    log_lines = []
+    verdict = run_agent(LazyThenHonestClient(), workspace, "fix the failing test", log_lines.append)
+    assert verdict == {"outcome": "fixed", "summary": "Fixed and verified."}
+    rejections = [line for line in log_lines if "REJECTED" in line]
+    assert len(rejections) == 2  # no-change finish, then unverified finish
+    assert "not modified any file" in rejections[0]
+    assert "not run the tests" in rejections[1]
+
+
+def test_text_only_reply_gets_nudged_back_to_tools(workspace):
+    """A narrating model ('I will now run the tests') gets a protocol reminder
+    (twice max) instead of an immediate gave_up."""
+    class Narrator(FakeClient):
+        def _create(self, **kwargs):
+            script = [
+                [SimpleNamespace(type="text", text="I will now fix the file.")],  # nudge 1
+                [self._block("edit_file", {
+                    "path": "calc.py", "old_str": "return a - b  # bug", "new_str": "return a + b",
+                })],
+                [SimpleNamespace(type="text", text="I will now run the tests.")],  # nudge 2
+                [self._block("run_tests", {"args": "test_calc.py"})],
+                [self._block("finish", {"outcome": "fixed", "summary": "Done properly."})],
+            ]
+            content = script[self.step]
+            self.step += 1
+            return SimpleNamespace(content=content, stop_reason="end_turn")
+
+    workspace.create_branch("flakelens/fix-add-4")
+    log_lines = []
+    verdict = run_agent(Narrator(), workspace, "fix the failing test", log_lines.append)
+    assert verdict == {"outcome": "fixed", "summary": "Done properly."}
+    assert sum("nudging" in line for line in log_lines) == 2
+
+
+def test_third_text_only_reply_gives_up(workspace):
+    class OnlyTalks(FakeClient):
+        def _create(self, **kwargs):
+            return SimpleNamespace(
+                content=[SimpleNamespace(type="text", text="Thinking about it...")],
+                stop_reason="end_turn")
+
+    verdict = run_agent(OnlyTalks(), workspace, "fix it", lambda _: None)
+    assert verdict["outcome"] == "gave_up"
+
+
+def test_finish_cannot_fix_is_not_gated(workspace):
+    """cannot_fix must pass through — the gate only guards 'fixed' claims."""
+    class GivesUp(FakeClient):
+        def _create(self, **kwargs):
+            return SimpleNamespace(
+                content=[self._block("finish", {"outcome": "cannot_fix", "summary": "App bug."})],
+                stop_reason="tool_use")
+
+    verdict = run_agent(GivesUp(), workspace, "fix it", lambda _: None)
+    assert verdict["outcome"] == "cannot_fix"
+
+
 def test_tool_schemas_are_wellformed():
     names = {tool["name"] for tool in TOOLS}
     assert {"list_files", "read_file", "edit_file", "write_file", "run_tests", "finish"} <= names

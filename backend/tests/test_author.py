@@ -4,7 +4,9 @@ import uuid
 from types import SimpleNamespace
 
 from flakelens.services.author import (
+    format_cue_note,
     format_snapshot,
+    pick_dismissal,
     run_author_agent,
     suggest_locator,
 )
@@ -41,6 +43,33 @@ def test_format_snapshot():
     assert 'Page: "Store"' in out
     assert 'get_by_role("button", name="Sign in")' in out
     assert "Username" in out
+
+
+def test_pick_dismissal_prefers_decline_over_accept():
+    cues = [{"kind": "cookie-consent", "buttons": ["Accept all", "Reject all", "Settings"]}]
+    assert pick_dismissal(cues) == ("cookie-consent", "Reject all")
+
+
+def test_pick_dismissal_neutral_close_before_accept():
+    cues = [{"kind": "overlay", "buttons": ["Accept", "Close"]}]
+    assert pick_dismissal(cues) == ("overlay", "Close")
+
+
+def test_pick_dismissal_accepts_as_last_resort_and_case_insensitive():
+    assert pick_dismissal([{"kind": "cookie-consent", "buttons": ["ACCEPT ALL"]}]) == \
+        ("cookie-consent", "ACCEPT ALL")
+
+
+def test_pick_dismissal_none_when_no_actionable_button():
+    assert pick_dismissal([]) is None
+    assert pick_dismissal([{"kind": "overlay", "buttons": ["Learn more"]}]) is None
+
+
+def test_format_cue_note_tells_agent_to_replicate():
+    note = format_cue_note("cookie-consent", "Reject all")
+    assert note.startswith("[cue]")
+    assert 'get_by_role("button", name="Reject all")' in note
+    assert "goto" in note  # instructs placement right after page.goto
 
 
 class FakeBrowser:

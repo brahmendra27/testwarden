@@ -56,6 +56,72 @@ _SNAPSHOT_JS = r"""
 
 _TAG_ROLE = {"a": "link", "button": "button", "select": "combobox", "textarea": "textbox"}
 
+# --- Cues: autonomous interstitial watchers -----------------------------------
+# Cookie banners, consent modals and promo popups are the #1 reason an authored
+# test that passed in the agent's browser flakes in CI (fresh profile = banner is
+# back). The driver detects them after every navigation/click, dismisses them,
+# and tells the agent what it did so the generated test handles them too.
+
+_CUES_JS = r"""
+() => {
+  const dismissPat = /^(reject all|reject|decline|necessary( cookies)? only|no thanks|not now|maybe later|close|dismiss|got it|ok(ay)?|continue|i agree|agree|accept all|accept|allow all|allow|[x×✕✖╳])$/i;
+  const cuePat = /cookie|consent|gdpr|privacy|banner|modal|popup|overlay|interstitial|newsletter|subscribe/i;
+  const containers = new Set();
+  for (const el of document.querySelectorAll('[role=dialog],[aria-modal="true"]')) containers.add(el);
+  for (const el of document.querySelectorAll('div,section,aside')) {
+    if (containers.size >= 8) break;
+    if (!cuePat.test(el.id + ' ' + el.className)) continue;
+    const st = getComputedStyle(el);
+    if ((st.position === 'fixed' || st.position === 'sticky') && el.offsetHeight > 40) containers.add(el);
+  }
+  const out = [];
+  for (const c of containers) {
+    if (!c.getClientRects().length) continue;
+    const buttons = [];
+    for (const b of c.querySelectorAll('button,[role=button],a')) {
+      const t = (b.getAttribute('aria-label') || b.innerText || '').trim().replace(/\s+/g, ' ');
+      if (t && dismissPat.test(t) && !buttons.includes(t)) buttons.push(t.slice(0, 40));
+    }
+    if (!buttons.length) continue;
+    const text = (c.innerText || '').slice(0, 300);
+    const kind = /cookie|consent|gdpr/i.test(c.id + ' ' + c.className + ' ' + text)
+      ? 'cookie-consent' : 'overlay';
+    out.push({ kind, buttons: buttons.slice(0, 6) });
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+"""
+
+# Dismissal preference: decline non-essential first (privacy-preserving), then
+# neutral close, accept only as a last resort. Deterministic for tests.
+_DISMISS_ORDER = [
+    ("reject all", "reject", "decline", "necessary only", "necessary cookies only", "no thanks"),
+    ("close", "dismiss", "not now", "maybe later", "got it", "ok", "okay",
+     "x", "×", "✕", "✖", "╳"),
+    ("accept all", "accept", "i agree", "agree", "allow all", "allow", "continue"),
+]
+
+
+def pick_dismissal(cues: list[dict]) -> tuple[str, str] | None:
+    """Choose (kind, button_name) to dismiss the first actionable cue, or None."""
+    for cue in cues:
+        lowered = {b.lower(): b for b in cue.get("buttons", [])}
+        for tier in _DISMISS_ORDER:
+            for want in tier:
+                if want in lowered:
+                    return cue["kind"], lowered[want]
+    return None
+
+
+def format_cue_note(kind: str, button: str) -> str:
+    """The line shown to the agent (and logged) when a cue was auto-dismissed."""
+    return (
+        f'[cue] Dismissed a {kind} interstitial via page.get_by_role("button", name="{button}").'
+        " Your generated test MUST perform this dismissal right after page.goto(), or it will"
+        " flake in CI where the banner reappears on a fresh profile."
+    )
+
 
 def suggest_locator(el: dict) -> str:
     """Best-practice Playwright locator for a snapshot element."""
@@ -111,8 +177,36 @@ class PlaywrightBrowser:
         self.page.goto(url, wait_until="domcontentloaded", timeout=20000)
         return self.snapshot()
 
+    def _run_cues(self) -> list[str]:
+        """Detect and dismiss interstitials (cookie banners, modals, promo popups).
+
+        Up to 3 rounds — dismissing one overlay sometimes reveals another.
+        Returns the notes to surface to the agent.
+        """
+        notes: list[str] = []
+        for _ in range(3):
+            try:
+                choice = pick_dismissal(self.page.evaluate(_CUES_JS))
+            except Exception:
+                break
+            if not choice:
+                break
+            kind, button = choice
+            try:
+                self.page.get_by_role("button", name=button, exact=True).first.click(timeout=3000)
+            except Exception:
+                try:
+                    self.page.get_by_text(button, exact=True).first.click(timeout=3000)
+                except Exception:
+                    break
+            self.page.wait_for_timeout(300)
+            notes.append(format_cue_note(kind, button))
+        return notes
+
     def snapshot(self) -> str:
-        return format_snapshot(self.page.evaluate(_SNAPSHOT_JS))
+        notes = self._run_cues()
+        text = format_snapshot(self.page.evaluate(_SNAPSHOT_JS))
+        return "\n".join(notes + [text]) if notes else text
 
     def click(self, selector: str) -> str:
         self.page.locator(selector).first.click(timeout=10000)
@@ -151,6 +245,11 @@ user actually described, not just that a click happened.
 run again until green.
 5. Call finish with outcome "authored" and a one-line summary once the test passes. If the app \
 can't be reached or the described behavior isn't possible, finish with outcome "cannot" and why.
+
+Cues: the browser auto-dismisses interstitials (cookie banners, consent modals, promo popups) \
+and reports each as a "[cue]" line in the snapshot. When you see one, replicate that exact \
+dismissal at the top of your test (right after page.goto) before any other interaction — in CI \
+the banner reappears on a fresh browser profile and would otherwise make the test flaky.
 
 Keep the test minimal, deterministic, and readable — a junior engineer should understand it."""
 

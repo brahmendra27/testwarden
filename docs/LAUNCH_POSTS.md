@@ -10,18 +10,35 @@ Links used everywhere:
 - GitHub: https://github.com/brahmendra27/testwarden
 - PyPI: https://pypi.org/project/pytest-flakelens/
 
-Suggested order: Playwright Discord first (fastest, friendliest signal), Reddit
-next day, Ministry of Testing after that. Space them out — you want capacity to
-respond, and each round's feedback improves the next post.
+Suggested order (Reddit demoted after both subs' rule warnings — see §1):
+1. Playwright Discord (fastest, friendliest signal)
+2. Ministry of Testing "Show and tell"
+3. LinkedIn Variant A
+4. Show HN (§5) once the first feedback round is absorbed
+5. Reddit last, after the account has real participation history
+
+Space them out — you want capacity to respond, and each round's feedback
+improves the next post.
 
 ---
 
 ## 1. Reddit
 
-⚠️ **r/QualityAssurance Rule 1 bans product/tool posts** — Reddit's filter flags
-the tool-showcase draft there, and mods will remove it. Don't fight it: post the
-tool where tools are welcome, and post a genuine link-free *discussion* in the
-QA subs. Always read each sub's rules in the sidebar before posting.
+⚠️ **Reddit is the highest-risk channel — treat it as phase 1.5, not phase 1.**
+Two separate trip-wires:
+
+- **r/QualityAssurance Rule 1** bans product/tool posts outright. Only the
+  link-free discussion variant (1b) is safe there.
+- **r/selfhosted Rule 2** allows project posts but enforces Reddit's
+  self-promotion guideline (~9:1 participation-to-promotion) — mods judge the
+  ACCOUNT, not the post. A new/quiet account whose first act is a launch post
+  gets removed no matter how good the copy is.
+
+**Play it accordingly:** launch first on the channels built for showing your own
+work (Discord show-and-tell, MoT Show-and-tell, LinkedIn, Show HN). Meanwhile,
+warm the Reddit account up — genuinely answer flaky-test/CI questions in these
+subs for a couple of weeks — then post 1a. The 1b discussion post promotes
+nothing and can go up anytime.
 
 ### 1a. r/selfhosted — tool showcase (self-hosted launches are their bread and butter)
 
@@ -256,6 +273,63 @@ LinkedIn is a different game from the QA forums:
 
 (Attach the walkthrough GIF or the 30-second video cut directly to the post —
 native media massively outperforms links. Same first-comment links as Variant A.)
+
+---
+
+## 5. Show HN (Hacker News)
+
+The one channel where "I made this" is the entire format — no self-promo risk.
+Mechanics that matter:
+
+- **Title must start with "Show HN:"** and be plain — no superlatives, no
+  emojis. HN flags marketing-speak instantly.
+- Link the **demo**, not the repo (the repo goes in your first comment).
+- Post a **first comment immediately** with the backstory — Show HNs without an
+  author comment die. Technical depth wins here; HN loves implementation detail.
+- Post 8–10am US Eastern on a weekday. If it doesn't take off, you may repost
+  once after a couple of weeks (HN explicitly allows this for Show HN).
+- Stay in the thread all day. HN will find every weakness — thank them, that's
+  phase-2 input.
+
+**Title:**
+> Show HN: FlakeLens – test observability where an AI agent fixes the flaky tests
+
+**URL:** https://flakelens-demo.onrender.com/
+
+**First comment (post immediately, as the author):**
+
+> Hi HN — QA engineer here. Every flaky-test tool I've used stops at a
+> dashboard: "this test is flaky, 47% fail rate, good luck." FlakeLens is my
+> attempt at building the part that's always missing.
+>
+> The pieces I think are technically interesting:
+>
+> *Deterministic flake reproduction.* Instead of shrugging at "passes locally,"
+> it re-runs the test under controlled perturbations — per-route network
+> latency/failures via route interception, CPU throttling over CDP, timing
+> jitter, seeded RNG/clock — and bisects to the minimal recipe that makes the
+> test fail reliably (threshold: ≥60% failure under recipe, ≥40% lift over
+> baseline). Flakiness becomes a reproducible bug report.
+>
+> *SelfHeal.* An agent (Claude with a small tool loop: read/edit/run tests)
+> diagnoses the failure and patches the test — but the fix only counts if it
+> passes 5/5 runs *under the reproduced failure recipe*, not just on a clean
+> re-run. It lands as a PR for human review, never merged automatically.
+>
+> *The quarantine loop.* Chronic flakes get a marker that turns them into
+> non-strict xfails — CI goes green, but they keep reporting data every run, so
+> the system knows when they're actually healed and suggests releasing them.
+>
+> Boring-but-important parts: self-hosted single Docker image, SQLite/Postgres,
+> pytest+Playwright native plus JUnit XML ingestion from anything, AI strictly
+> opt-in (no key, no external calls). MIT.
+>
+> Repo: https://github.com/brahmendra27/testwarden
+>
+> The design question I'd most like your take on: a flaky test is often a
+> symptom of a real app bug, and auto-fixing the test risks papering over it.
+> I route "app bug"/"environment" classifications to humans and only heal test
+> bugs — but the classifier is an LLM too. Where would you draw the line?
 
 ---
 

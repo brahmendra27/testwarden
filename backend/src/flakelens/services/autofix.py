@@ -20,9 +20,12 @@ from flakelens.models import (
     TestCase,
     TestResult,
 )
+from flakelens.services.llm import make_client, model_kwargs
 from flakelens.services.workspace import FixWorkspace, WorkspaceError
 
-MODEL = "claude-opus-4-8"
+from flakelens.config import settings as _settings
+
+MODEL = _settings.llm_model
 MAX_ITERATIONS = 25
 
 SYSTEM_PROMPT = """You are FlakeLens's autonomous fix agent. A test in this repository failed \
@@ -133,9 +136,7 @@ def run_agent(client, workspace: FixWorkspace, task: str, log, system: str = SYS
     messages = [{"role": "user", "content": task}]
     for iteration in range(1, MAX_ITERATIONS + 1):
         response = client.messages.create(
-            model=MODEL,
-            max_tokens=6000,
-            thinking={"type": "adaptive"},
+            **model_kwargs(max_tokens=6000),
             system=system,
             tools=TOOLS,
             messages=messages,
@@ -290,9 +291,7 @@ def execute_autofix_job(job_id: int) -> None:
             job.branch = branch
             log(f"Branch {branch} created from {base_branch}. Starting agent ({MODEL}) ...")
 
-            import anthropic
-
-            client = anthropic.Anthropic()
+            client = make_client()
             started = time.monotonic()
             verdict = run_agent(client, workspace, _build_task(db, result, case, run), log)
             log(f"Agent finished in {time.monotonic() - started:.0f}s: {verdict['outcome']}")

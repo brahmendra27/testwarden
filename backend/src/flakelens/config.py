@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     secure_cookies: bool = False
     # Seed demo data on startup if the database has no projects (hosted demo).
     seed_on_start: bool = False
+    # LLM the agents use. Default: Anthropic API (needs ANTHROPIC_API_KEY).
+    # Point llm_base_url at any Anthropic-Messages-compatible server (Ollama,
+    # LiteLLM proxy over vLLM/llama.cpp/LM Studio) to run fully local — no key,
+    # no data leaves the machine. Set llm_model to that server's model name.
+    llm_model: str = "claude-opus-4-8"
+    llm_base_url: str = ""
 
 
 settings = Settings()

@@ -120,7 +120,7 @@ def test_crew_endpoints(client, project_key, monkeypatch):
 
 
 def test_crew_run_without_ai_reports_only(client, project_key, monkeypatch, db):
-    """End-to-end pipeline with no ANTHROPIC_API_KEY: clusters + digests, no actions."""
+    """End-to-end pipeline with no LLM configured: clusters + digests, no actions."""
     from flakelens.models import CrewRun
     from flakelens.services.crew import execute_crew_run
 
@@ -138,5 +138,5 @@ def test_crew_run_without_ai_reports_only(client, project_key, monkeypatch, db):
     assert run.status == "completed"
     assert run.incidents
     assert run.incidents[0]["classification"] == "UNANALYZED"
-    assert "no ANTHROPIC_API_KEY" in run.incidents[0]["action_reason"]
+    assert "no LLM configured" in run.incidents[0]["action_reason"]
     assert run.digest and "maintenance crew" in run.digest

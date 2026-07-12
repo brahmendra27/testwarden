@@ -18,6 +18,7 @@ from flakelens.config import settings
 from flakelens.db import SessionLocal
 from flakelens.models import AuthorJob, Project
 from flakelens.services.autofix import MODEL
+from flakelens.services.llm import make_client, model_kwargs
 from flakelens.services.workspace import FixWorkspace, WorkspaceError
 
 MAX_ITERATIONS = 30
@@ -285,7 +286,7 @@ def run_author_agent(client, browser: BrowserSession, workspace: FixWorkspace, t
     messages = [{"role": "user", "content": task}]
     for iteration in range(1, MAX_ITERATIONS + 1):
         response = client.messages.create(
-            model=MODEL, max_tokens=6000, thinking={"type": "adaptive"},
+            **model_kwargs(max_tokens=6000),
             system=SYSTEM_PROMPT, tools=TOOLS, messages=messages,
         )
         tool_uses = [b for b in response.content if b.type == "tool_use"]
@@ -371,9 +372,7 @@ def execute_author_job(job_id: int) -> None:
                 f"Starting URL: {job.url}\n\n"
                 "Author and verify the test."
             )
-            import anthropic
-
-            client = anthropic.Anthropic()
+            client = make_client()
             log(f"Starting author agent ({MODEL}) ...")
             started = time.monotonic()
             verdict = run_author_agent(client, browser, workspace, task, log)

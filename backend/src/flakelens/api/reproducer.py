@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from flakelens.db import get_db
 from flakelens.models import ReproJob, TestCase
 from flakelens.services.reproducer_exec import execute_repro_job
+from flakelens.services.llm import llm_available
 
 router = APIRouter(prefix="/api/v1", tags=["reproducer"])
 
@@ -36,7 +37,7 @@ def latest_reproducer(case_id: int, db: Session = Depends(get_db)):
     job = db.scalar(
         select(ReproJob).where(ReproJob.test_case_id == case_id).order_by(ReproJob.id.desc())
     )
-    return {"available": bool(os.environ.get("ANTHROPIC_API_KEY")), "job": _payload(job)}
+    return {"available": llm_available(), "job": _payload(job)}
 
 
 @router.post("/tests/{case_id}/reproducer")
@@ -46,7 +47,7 @@ def start_reproducer(
     case = db.get(TestCase, case_id)
     if case is None:
         raise HTTPException(status_code=404, detail="Test case not found")
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    if not llm_available():
         # The reproducer itself needs no LLM, but a repo_url + browser runtime is
         # required; gate on the same server-configured signal for consistency.
         pass

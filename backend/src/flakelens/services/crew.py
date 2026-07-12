@@ -19,6 +19,7 @@ from sqlalchemy import select
 
 from flakelens.db import SessionLocal
 from flakelens.models import AgentJob, CrewRun, Project, Run, TestCase, TestResult
+from flakelens.services.llm import llm_available
 
 # Per-pass budgets: bound cost and blast radius.
 MAX_INCIDENTS_ANALYZED = 5
@@ -179,13 +180,13 @@ def execute_crew_run(crew_run_id: int) -> None:
             incidents = build_incidents(rows)
             log(f"Clustered into {len(incidents)} incident(s).")
 
-            ai_available = bool(os.environ.get("ANTHROPIC_API_KEY"))
+            ai_available = llm_available()
             heals = quarantines = 0
             for index, incident in enumerate(incidents):
                 if index >= MAX_INCIDENTS_ANALYZED or not ai_available:
                     incident["classification"] = "UNANALYZED"
                     incident["action_reason"] = (
-                        "analysis budget reached" if ai_available else "no ANTHROPIC_API_KEY"
+                        "analysis budget reached" if ai_available else "no LLM configured"
                     )
                     continue
                 incident["classification"] = _classify(db, incident, log)

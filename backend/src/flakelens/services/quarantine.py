@@ -123,9 +123,9 @@ def execute_marker_job(job_id: int) -> None:
                 f"Recorded file path (may be relative to a subproject): {case.file_path}\n"
                 f"Cross-run flake score: {case.flake_score}\n"
             )
-            import anthropic
+            from flakelens.services.llm import make_client
 
-            client = anthropic.Anthropic()
+            client = make_client()
             log(f"Starting {action} agent ({MODEL}) ...")
             started = time.monotonic()
             verdict = run_agent(

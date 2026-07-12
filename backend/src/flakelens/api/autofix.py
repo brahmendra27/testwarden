@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from flakelens.db import get_db
 from flakelens.models import AgentJob, Project, TestResult
 from flakelens.services.autofix import execute_autofix_job
+from flakelens.services.llm import llm_available
 
 router = APIRouter(prefix="/api/v1", tags=["autofix"])
 
@@ -38,7 +39,7 @@ def latest_autofix(result_id: int, db: Session = Depends(get_db)):
         .order_by(AgentJob.id.desc())
     )
     return {
-        "available": bool(os.environ.get("ANTHROPIC_API_KEY")),
+        "available": llm_available(),
         "job": _payload(job) if job else None,
     }
 
@@ -54,10 +55,10 @@ def start_autofix(
         raise HTTPException(status_code=404, detail="Result not found")
     if result.status not in ("failed", "error") and not result.is_flaky_in_run:
         raise HTTPException(status_code=400, detail="Result has no failure to fix")
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    if not llm_available():
         raise HTTPException(
             status_code=503,
-            detail="Auto-fix unavailable: set ANTHROPIC_API_KEY on the server",
+            detail="Auto-fix unavailable: set ANTHROPIC_API_KEY or FLAKELENS_LLM_BASE_URL on the server",
         )
     active = db.scalar(
         select(AgentJob).where(

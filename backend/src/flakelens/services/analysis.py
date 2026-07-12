@@ -1,15 +1,17 @@
-"""AI failure analysis: sends the failure context to Claude and stores the verdict.
+"""AI failure analysis: sends the failure context to the LLM, stores the verdict.
 
 First slice of the phase-2 auto-fix agent — analysis only, no patching yet.
-Requires ANTHROPIC_API_KEY in the environment; degrades gracefully without it.
+Needs ANTHROPIC_API_KEY or FLAKELENS_LLM_BASE_URL; degrades gracefully without.
 """
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from flakelens.config import settings as _settings
 from flakelens.models import FailureAnalysis, Run, TestAttempt, TestCase, TestResult
+from flakelens.services.llm import make_client, model_kwargs
 from flakelens.services.redact import scrub
 
-MODEL = "claude-opus-4-8"
+MODEL = _settings.llm_model
 
 SYSTEM_PROMPT = """You are a senior test automation engineer analyzing a failed UI/API test.
 Given the test identity, error, stack trace and retry history, produce a concise analysis:
@@ -81,13 +83,9 @@ def analyze_result(db: Session, result: TestResult, force: bool = False) -> Fail
         if existing is not None:
             return existing
 
-    import anthropic
-
-    client = anthropic.Anthropic()
+    client = make_client()
     response = client.messages.create(
-        model=MODEL,
-        max_tokens=2000,
-        thinking={"type": "adaptive"},
+        **model_kwargs(max_tokens=2000),
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": _build_context(db, result)}],
     )

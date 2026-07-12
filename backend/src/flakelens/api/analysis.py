@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from flakelens.db import get_db
 from flakelens.models import FailureAnalysis, TestResult
 from flakelens.services.analysis import analyze_result
+from flakelens.services.llm import llm_available
 
 router = APIRouter(prefix="/api/v1", tags=["analysis"])
 
@@ -30,7 +31,7 @@ def get_analysis(result_id: int, db: Session = Depends(get_db)):
         .order_by(FailureAnalysis.id.desc())
     )
     return {
-        "available": bool(os.environ.get("ANTHROPIC_API_KEY")),
+        "available": llm_available(),
         "analysis": _payload(analysis, cached=True) if analysis else None,
     }
 
@@ -42,10 +43,10 @@ def analyze(result_id: int, force: bool = False, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Result not found")
     if result.status not in ("failed", "error") and not result.is_flaky_in_run:
         raise HTTPException(status_code=400, detail="Result has no failure to analyze")
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    if not llm_available():
         raise HTTPException(
             status_code=503,
-            detail="AI analysis unavailable: set ANTHROPIC_API_KEY on the server",
+            detail="AI analysis unavailable: set ANTHROPIC_API_KEY or FLAKELENS_LLM_BASE_URL on the server",
         )
     existing = db.scalar(
         select(FailureAnalysis)

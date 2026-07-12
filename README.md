@@ -166,10 +166,13 @@ cd packages\pytest-flakelens; ..\..\.venv\Scripts\python -m pytest   # 7 plugin 
 
 ## AI features
 
-Both need `ANTHROPIC_API_KEY` set on the backend server (model: `claude-opus-4-8`).
+The agents need an LLM: either `ANTHROPIC_API_KEY` (hosted, default model
+`claude-opus-4-8`) **or a fully local model** — set `FLAKELENS_LLM_BASE_URL` +
+`FLAKELENS_LLM_MODEL` to point at Ollama / a LiteLLM proxy and nothing leaves your
+machine. See [`docs/LOCAL_LLM.md`](docs/LOCAL_LLM.md).
 All evidence sent to the LLM (failure context, SelfHeal task, OpenAPI specs) is first run
 through a secret-scrubber (`services/redact.py`) that redacts bearer tokens, API keys, JWTs,
-URL-embedded passwords, cookies, and sensitive key/value pairs.
+URL-embedded passwords, cookies, and sensitive key/value pairs — local or hosted alike.
 
 - **Write a test in plain English** — the author agent takes a plain-English description + a
   URL, drives your app in a real browser to discover the actual selectors, writes a

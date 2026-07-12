@@ -8,6 +8,7 @@ from flakelens.api.projects import get_project_by_slug
 from flakelens.db import get_db
 from flakelens.models import AgentJob, TestCase
 from flakelens.services.autofix import execute_autofix_job
+from flakelens.services.llm import llm_available
 from flakelens.services.quarantine import (
     execute_marker_job,
     latest_failing_result,
@@ -21,9 +22,9 @@ _AGENT_KINDS = ("quarantine", "release", "autofix")
 
 
 def _require_ai() -> None:
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    if not llm_available():
         raise HTTPException(
-            status_code=503, detail="Agent unavailable: set ANTHROPIC_API_KEY on the server"
+            status_code=503, detail="Agent unavailable: set ANTHROPIC_API_KEY or FLAKELENS_LLM_BASE_URL on the server"
         )
 
 
@@ -106,7 +107,7 @@ def quarantine_board(slug: str, db: Session = Depends(get_db)):
     suggestions.sort(key=lambda c: c.flake_score, reverse=True)
     quarantined.sort(key=lambda c: (not release_ready(c), -c.flake_score))
     return {
-        "available": bool(os.environ.get("ANTHROPIC_API_KEY")),
+        "available": llm_available(),
         "suggestions": [_case_payload(db, c) for c in suggestions],
         "quarantined": [_case_payload(db, c) for c in quarantined],
     }

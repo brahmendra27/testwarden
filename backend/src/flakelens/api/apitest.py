@@ -9,6 +9,7 @@ from flakelens.api.projects import get_project_by_slug
 from flakelens.db import get_db
 from flakelens.models import ApiTestJob
 from flakelens.services.apitest import execute_apitest_job
+from flakelens.services.llm import llm_available
 
 router = APIRouter(prefix="/api/v1", tags=["api-agent"])
 
@@ -45,7 +46,7 @@ def latest_api_test(slug: str, db: Session = Depends(get_db)):
         .order_by(ApiTestJob.id.desc())
     )
     return {
-        "available": bool(os.environ.get("ANTHROPIC_API_KEY")),
+        "available": llm_available(),
         "job": _payload(job) if job else None,
     }
 
@@ -58,10 +59,10 @@ def start_api_test(
     db: Session = Depends(get_db),
 ):
     project = get_project_by_slug(slug, db)
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    if not llm_available():
         raise HTTPException(
             status_code=503,
-            detail="API agent unavailable: set ANTHROPIC_API_KEY on the server",
+            detail="API agent unavailable: set ANTHROPIC_API_KEY or FLAKELENS_LLM_BASE_URL on the server",
         )
     active = db.scalar(
         select(ApiTestJob).where(

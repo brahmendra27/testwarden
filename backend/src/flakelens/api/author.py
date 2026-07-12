@@ -9,6 +9,7 @@ from flakelens.api.projects import get_project_by_slug
 from flakelens.db import get_db
 from flakelens.models import AuthorJob
 from flakelens.services.author import execute_author_job
+from flakelens.services.llm import llm_available
 
 router = APIRouter(prefix="/api/v1", tags=["author"])
 
@@ -45,7 +46,7 @@ def latest_author(slug: str, db: Session = Depends(get_db)):
     job = db.scalar(
         select(AuthorJob).where(AuthorJob.project_id == project.id).order_by(AuthorJob.id.desc())
     )
-    return {"available": bool(os.environ.get("ANTHROPIC_API_KEY")),
+    return {"available": llm_available(),
             "job": _payload(job) if job else None}
 
 
@@ -53,8 +54,8 @@ def latest_author(slug: str, db: Session = Depends(get_db)):
 def start_author(slug: str, payload: AuthorRequest, background: BackgroundTasks,
                  db: Session = Depends(get_db)):
     project = get_project_by_slug(slug, db)
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        raise HTTPException(status_code=503, detail="Author agent unavailable: set ANTHROPIC_API_KEY")
+    if not llm_available():
+        raise HTTPException(status_code=503, detail="Author agent unavailable: set ANTHROPIC_API_KEY or FLAKELENS_LLM_BASE_URL")
     active = db.scalar(
         select(AuthorJob).where(AuthorJob.project_id == project.id,
                                 AuthorJob.status.in_(("queued", "running")))

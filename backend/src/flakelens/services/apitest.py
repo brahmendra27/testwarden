@@ -95,9 +95,9 @@ def execute_apitest_job(job_id: int) -> None:
                 "Generate the test suite, verify it with run_tests, then call finish."
             )
 
-            import anthropic
+            from flakelens.services.llm import make_client
 
-            client = anthropic.Anthropic()
+            client = make_client()
             original_run_tests = workspace.run_tests
 
             def run_tests_with_base_url(args, cwd=".", timeout=300, extra_env=None):

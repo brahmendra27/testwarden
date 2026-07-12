@@ -54,26 +54,32 @@ function PipInstall() {
   );
 }
 
-type Health = {
-  grade: string;
-  score: number;
-  pass_rate: number | null;
-  flaky: number;
-  incidents?: number;
+// Full /health response body. IMPORTANT: this query shares its key with
+// HealthPanel's ["health", slug] query, so both MUST cache the same shape —
+// caching the unwrapped `health` object here crashed HealthPanel on
+// landing → Overview click-through (data.health was undefined).
+type HealthBody = {
+  health: {
+    grade: string;
+    score: number;
+    pass_rate: number | null;
+    flaky: number;
+    incidents?: number;
+  };
 };
 
 function StatChips({ slug }: { slug: string }) {
-  const { data } = useQuery({
+  const { data: body } = useQuery({
     queryKey: ["health", slug],
-    queryFn: async (): Promise<Health> => {
+    queryFn: async (): Promise<HealthBody> => {
       const r = await fetch(`/api/v1/projects/${slug}/health`);
       if (!r.ok) throw new Error("health unavailable");
-      const body = await r.json();
-      return body.health; // endpoint returns { health, actions }
+      return r.json();
     },
     staleTime: 60_000,
     retry: false,
   });
+  const data = body?.health;
   if (!data || data.grade === "—") return null;
   const chips = [
     { label: "health grade", value: data.grade },

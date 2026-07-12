@@ -38,7 +38,9 @@ export function HealthPanel() {
     },
   });
 
-  if (!data) return null;
+  // Guard the full shape — a cache entry with the wrong shape (e.g. from another
+  // consumer of this query key) must degrade to nothing, not crash the page.
+  if (!data?.health || !data.actions) return null;
   const grade = data.health.grade;
 
   return (

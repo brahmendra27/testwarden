@@ -148,12 +148,19 @@ function Hero({ demoSlug }: { demoSlug?: string }) {
           {demoSlug && <StatChips slug={demoSlug} />}
         </div>
         <div className="hidden xl:block">
-          <div className="overflow-hidden rounded-xl border border-white/10 shadow-[0_0_40px_rgba(61,106,254,0.15)]">
+          {/* aspect-ratio reserved + skeleton so the slow-loading GIF (free-tier
+              cold start) never shows as an empty broken frame */}
+          <div
+            className="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] shadow-[0_0_40px_rgba(61,106,254,0.15)]"
+            style={{ aspectRatio: "900 / 576" }}
+          >
+            <div className="shimmer-line absolute inset-0" aria-hidden />
             <img
               src="/flakelens-demo.gif"
               alt="FlakeLens dashboard walkthrough"
-              className="block w-full"
-              loading="lazy"
+              className="relative block h-full w-full object-cover"
+              loading="eager"
+              decoding="async"
             />
           </div>
         </div>

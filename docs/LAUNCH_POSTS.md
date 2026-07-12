@@ -16,42 +16,86 @@ respond, and each round's feedback improves the next post.
 
 ---
 
-## 1. Reddit — r/QualityAssurance (also fits r/softwaretesting)
+## 1. Reddit
+
+⚠️ **r/QualityAssurance Rule 1 bans product/tool posts** — Reddit's filter flags
+the tool-showcase draft there, and mods will remove it. Don't fight it: post the
+tool where tools are welcome, and post a genuine link-free *discussion* in the
+QA subs. Always read each sub's rules in the sidebar before posting.
+
+### 1a. r/selfhosted — tool showcase (self-hosted launches are their bread and butter)
 
 **Title:**
-> I got tired of tools that only *tell* me a test is flaky, so I built one that tries to fix it. Would love brutal feedback.
+> FlakeLens — self-hosted test observability where an AI agent actually fixes your flaky tests (single Docker image)
 
 **Body:**
 
 > QA engineer here. Every flaky-test tool I've used ends at a dashboard: "this
-> test is flaky, 47% failure rate, good luck." The retry-until-green culture
-> that follows is how test suites quietly rot.
+> test is flaky, 47% failure rate, good luck." So I built the part that's always
+> missing.
 >
-> So I built FlakeLens, a self-hosted test observability platform that tries to
-> close the loop instead of just observing it:
+> FlakeLens is a self-hosted test observability platform that closes the loop
+> instead of just observing:
 >
 > - **Detects** flaky tests (cross-run flip rate + within-run retry recoveries)
-> - **Reproduces** them deterministically — it re-runs the test under controlled
+> - **Reproduces** them deterministically — re-runs the test under controlled
 >   chaos (network latency/failures, CPU throttle, timing jitter, seeded clock)
->   and bisects to the minimal condition that makes it fail. No more "can't repro".
+>   and bisects to the minimal condition that makes it fail
 > - **Fixes** them — an AI agent diagnoses the failure, patches the test, verifies
 >   it passes *under the reproduced failure condition*, and opens a PR
 > - **Quarantines** chronic flakes so CI stays green while fixes happen in the
->   background, and gives a merge verdict that ignores known-flaky noise
+>   background
 >
-> It ingests Playwright/pytest natively and JUnit XML from anything else
-> (Selenium, Cypress, Jest...). Self-hosted, open source, single Docker image.
+> Self-hosted specifics, since that's why we're all here:
+> - Single Docker image (API + dashboard), `docker compose up` and done
+> - SQLite by default, Postgres for real deployments
+> - Ingests Playwright/pytest natively, JUnit XML from anything else
+> - AI features are strictly opt-in — no API key set, no external calls; all the
+>   observability works without it
+> - Optional shared-token auth for exposing it beyond your LAN
 >
 > Clickable demo (no signup, seeded data): https://flakelens-demo.onrender.com/
-> Code: https://github.com/brahmendra27/testwarden
+> Code (MIT): https://github.com/brahmendra27/testwarden
 >
-> Honest questions for people who fight flaky tests for a living:
-> 1. Would you trust an AI-authored fix to a test if it came as a reviewable PR?
-> 2. Is deterministic reproduction actually valuable to you, or do you just
->    delete/quarantine and move on?
-> 3. What would stop you from adopting something like this?
+> Early days — would love feedback, especially on the self-hosting story.
+
+(Also fine, same draft lightly retitled: **r/opensource**, **r/SideProject**,
+**r/Python** — check r/Python's showcase-thread rules first.)
+
+### 1b. r/QualityAssurance / r/softwaretesting — DISCUSSION ONLY (no links, no tool name)
+
+This respects Rule 1: it's a real question about practice, not a pitch. Do NOT
+link the demo or repo in the post. If someone asks "is there a tool?" you may
+answer in a comment — that's their ask, not your ad. Never DM-spam.
+
+**Title:**
+> Would you trust an AI-authored fix to a flaky test if it arrived as a reviewable PR?
+
+**Body:**
+
+> Genuine question for people who fight flaky tests for a living.
 >
-> Tear it apart. I'd rather hear it now than after I've built more.
+> The standard lifecycle I've seen everywhere: notice the flake → add a retry →
+> mutter → eventually quarantine or delete the test. The tooling stops at
+> *telling* you it's flaky.
+>
+> I've been experimenting with going further: deterministically reproducing the
+> flake (re-running it under controlled network/timing/CPU chaos until there's a
+> minimal recipe that makes it fail every time), then having an AI agent patch
+> the test and prove the fix passes under that exact failure condition before
+> opening a PR.
+>
+> The part I keep going back and forth on: a flaky test is often a symptom of a
+> real bug — a race in the app, not the test. Auto-fixing the test could paper
+> over it. Classification helps (route "app bug" to humans, only heal genuine
+> test bugs), but classifiers are fallible too.
+>
+> So:
+> 1. Would you merge an AI's fix to a *test* if it came with evidence it passes
+>    under the reproduced failure condition?
+> 2. Where's your line between tooling that informs humans vs tooling that acts?
+> 3. Is deterministic flake reproduction even valuable to you, or do you just
+>    quarantine and move on?
 
 ---
 
@@ -227,6 +271,9 @@ native media massively outperforms links. Same first-comment links as Variant A.
 ## What NOT to do
 
 - Don't cross-post the same day (looks like a spam campaign)
+- Don't post tool showcases in subs whose rules ban them (r/QualityAssurance
+  Rule 1) — a mod removal or ban costs the account's credibility for later
+  launches; use the link-free discussion variant there instead
 - Don't use marketing language ("revolutionary", "game-changer") — these
   communities are allergic to it
 - Don't hide that AI wrote fixes — it's the differentiator *and* the controversy;

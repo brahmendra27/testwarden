@@ -127,6 +127,94 @@ Discord wants short, concrete, and native to their tool. No wall of text.
 
 ---
 
+## 4. LinkedIn
+
+LinkedIn is a different game from the QA forums:
+
+- **The first 2 lines are everything** — that's all that shows before "…see more".
+  Hook or die.
+- **External links in the post body get deranked.** Put the demo/repo links in
+  the FIRST COMMENT, and say "links in comments" in the post.
+- Short lines, white space, a personal arc. LinkedIn rewards "I built/learned"
+  stories over product announcements.
+- Post Tue–Thu morning your time; reply to every comment (comments > likes for
+  reach); 3–5 hashtags max at the bottom.
+
+### Variant A — post NOW (builder story + feedback ask, pairs with the QA-community round)
+
+> Every flaky-test tool I've ever used stopped at the same place: a dashboard
+> telling me the test is flaky. Thanks. I knew.
+>
+> So I spent the last few weeks building the part that's always missing — the fix.
+>
+> FlakeLens is a self-hosted test observability platform where the AI doesn't
+> just watch your test suite, it acts on it:
+>
+> 🔬 Reproduces a flaky test deterministically — reruns it under controlled
+> network, CPU and timing chaos until it finds the minimal recipe that makes it
+> fail every time. "Can't reproduce" stops being an excuse.
+>
+> 🩹 SelfHeal — diagnoses the failure, patches the test, proves the fix passes
+> under that exact failure condition, and opens a pull request for review.
+>
+> ✍️ Write a test in plain English — describe the flow, the agent drives the
+> real app in a browser, writes the Playwright test, and verifies it green
+> before showing you the code.
+>
+> 🛡️ Chronic flakes get quarantined so CI stays green, healed in the background,
+> and released when stable. The merge verdict ignores known-flaky noise.
+>
+> It's open source, self-hosted (one Docker image), and the pytest reporter is
+> on PyPI.
+>
+> I just put up a live demo — no signup, click around a seeded project. Link in
+> the comments.
+>
+> I'm at the "brutal feedback wanted" stage. If you fight flaky tests for a
+> living: what would make you trust — or never trust — an AI-authored fix to a
+> test?
+>
+> #QualityAssurance #TestAutomation #Playwright #AI #OpenSource
+
+**First comment (post it yourself immediately):**
+
+> 🔗 Live demo (no signup): https://flakelens-demo.onrender.com/
+> 💻 Code: https://github.com/brahmendra27/testwarden
+> 📦 pip install pytest-flakelens — https://pypi.org/project/pytest-flakelens/
+
+### Variant B — hold for the BIG launch (after feedback round; attach the video/GIF)
+
+> "Every tool tells you a test is flaky. FlakeLens fixes it."
+>
+> Three weeks ago I posted an early version of FlakeLens and asked QA
+> communities to tear it apart. They did. I fixed what they broke, kept what
+> they loved, and today it's ready for a proper launch.
+>
+> What it does, in one run:
+> → your suite reports in (Playwright, pytest, or JUnit from anything)
+> → flaky tests get detected, reproduced deterministically, and quarantined so
+>   CI stays green
+> → an AI agent fixes the real test bugs and opens PRs — each fix verified
+>   against the exact condition that made the test fail
+> → you get an A–F suite health grade and a plain-English "what should I do
+>   today" list — no QA archaeology required
+>
+> And the part I'm proudest of: describe a test in plain English, and the agent
+> drives your real app, writes the test, and proves it passes before you ever
+> see the code.
+>
+> Open source. Self-hosted. One Docker image.
+>
+> Demo, repo and PyPI links in the comments. If your team burns hours a week on
+> flaky tests, I'd love to hear what your retry-until-green workflow costs you.
+>
+> #QualityAssurance #TestAutomation #Playwright #AI #OpenSource #DevTools
+
+(Attach the walkthrough GIF or the 30-second video cut directly to the post —
+native media massively outperforms links. Same first-comment links as Variant A.)
+
+---
+
 ## Posting checklist
 
 - [ ] Render demo is awake right before posting (free tier sleeps — open the URL

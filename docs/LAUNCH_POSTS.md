@@ -10,15 +10,38 @@ Links used everywhere:
 - GitHub: https://github.com/brahmendra27/testwarden
 - PyPI: https://pypi.org/project/pytest-flakelens/
 
-Suggested order (Reddit demoted after both subs' rule warnings — see §1):
-1. Playwright Discord (fastest, friendliest signal)
-2. Ministry of Testing "Show and tell"
-3. LinkedIn Variant A
-4. Show HN (§5) once the first feedback round is absorbed
-5. Reddit last, after the account has real participation history
+## Reality check: three gates, one pattern
 
-Space them out — you want capacity to respond, and each round's feedback
-improves the next post.
+Reddit (r/QualityAssurance, r/selfhosted) and Hacker News all pushed back before
+a single post went up. HN's message as of 2026-07 is explicit: **Show HN is
+temporarily closed to accounts without an established participation history**
+("massive influx... users who aren't yet familiar with the site or its
+culture" — https://news.ycombinator.com/newsguidelines.html,
+https://news.ycombinator.com/showhn.html). That's the same root cause as the
+Reddit warnings: these communities gate self-promotion on **account trust**,
+not on how the copy is worded. No amount of redrafting fixes an account with no
+history — only participating does.
+
+**Suggested order, gated by what each channel actually requires:**
+1. **Playwright Discord** — show-and-tell channels welcome this immediately, no
+   tenure requirement
+2. **Ministry of Testing "Show and tell"** — same, an explicit self-promo home
+3. **LinkedIn Variant A** — your own feed, no gate
+4. **Show HN** — hold. Read the newcomer links HN sent
+   (newsguidelines.html, newswelcome.html, showhn.html), then spend real time
+   commenting on other threads — testing/CI/QA stories are a natural fit for
+   your background. Revisit once Show HN reopens broadly or your account has
+   an established history; there's no fixed timeline, so check back
+   periodically rather than assuming a date.
+5. **Reddit showcases (1a)** — same treatment: participate genuinely in
+   r/selfhosted and r/QualityAssurance for a couple of weeks first, then post.
+   The link-free discussion draft (1b) requires no history and can go up now.
+
+Space channels out — you want capacity to respond, and each round's feedback
+improves the next post. Channels 4 and 5 aren't cancelled, just resequenced
+behind genuine participation; don't try to route around the gate by finding a
+"loophole" wording — that reads as exactly the pattern-matching these
+communities are trying to filter out.
 
 ---
 
@@ -276,10 +299,17 @@ native media massively outperforms links. Same first-comment links as Variant A.
 
 ---
 
-## 5. Show HN (Hacker News)
+## 5. Show HN (Hacker News) — ON HOLD, see reality-check above
 
-The one channel where "I made this" is the entire format — no self-promo risk.
-Mechanics that matter:
+HN closed Show HN to accounts without established history as of 2026-07 (their
+message: "temporarily restricting Show HNs because of a massive influx... take
+some time to get to know the community, become a good contributor, and then
+it will be fine to post"). Draft kept below for when that's true of this
+account — don't attempt to post it before then. In the meantime, comment
+genuinely on threads (testing/CI/flaky-test stories fit naturally) — that's
+what "getting to know the community" means in practice, not a waiting period.
+
+Once eligible, the mechanics that matter:
 
 - **Title must start with "Show HN:"** and be plain — no superlatives, no
   emojis. HN flags marketing-speak instantly.
